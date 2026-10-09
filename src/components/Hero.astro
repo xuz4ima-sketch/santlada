@@ -4,9 +4,9 @@ import ceiling from '../assets/hero/ceiling.jpg';
 import { site } from '../config/site';
 import { plural } from '../lib/plural';
 
-// Первый экран: фото потолка с подсветкой и крупный заголовок «Натяжные потолки Сантлада».
+// Первый экран: фото потолка с подсветкой и крупный заголовок «Натяжные потолки Santlada».
 // Подмена фото: файл src/assets/hero/ceiling.jpg (потолок в верхней части кадра, от 1600 px по ширине).
-const lead = 'Хасавюрт и весь Дагестан. Световые линии, парящие и теневые потолки.';
+const lead = 'Делаю потолки в Хасавюрте и по всему Дагестану: световые линии, парящие и теневые.';
 const facts = [
   `Гарантия ${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', 'года', 'лет'])}`,
   `Опыт ${site.experience}`,
@@ -29,9 +29,8 @@ const facts = [
 
   <div class="container-page hero-body">
     <h1 class="hero-title">
-      <span>Натяжные</span>
-      <span>потолки</span>
-      <span>{site.brandRu}</span>
+      <span class="hero-kicker">Натяжные потолки</span>
+      <span class="hero-brand">Santlada</span>
     </h1>
     <p class="hero-lead">{lead}</p>
     <ul class="hero-facts">
@@ -40,7 +39,7 @@ const facts = [
 
     <div class="hero-actions">
       <a href="#raboty" class="btn-primary btn-shine hero-more">Смотреть работы</a>
-      <a href="#ceny" data-magnet class="btn-ghost hero-cta">Цены на полотна</a>
+      <a href="#ceny" data-magnet class="btn-ghost hero-cta">Выбрать полотно</a>
     </div>
   </div>
 </section>

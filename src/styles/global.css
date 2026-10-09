@@ -282,16 +282,49 @@
 .hero-title {
   margin-left: -0.04em;
   font-family: var(--font-display);
-  font-size: clamp(2.75rem, 13vw, 6.5rem);
-  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.03em;
   color: #fff;
   text-shadow: 0 2px 28px rgb(7 19 51 / 0.5);
 }
 
 .hero-title span {
   display: block;
+}
+
+/* «Натяжные потолки» — спокойная строка над названием, чтобы название читалось отдельно */
+.hero-kicker {
+  display: flex !important;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: 0.04em;
+  font-size: clamp(1.0625rem, 4.2vw, 1.75rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgb(255 255 255 / 0.88);
+
+  &::before {
+    content: '';
+    width: 2rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-glow);
+    box-shadow: 0 0 10px 1px var(--color-glow);
+  }
+}
+
+/* Santlada — крупно, плотным начертанием и с голубым переливом, чтобы отличаться от строки выше */
+.hero-brand {
+  margin-top: 0.15em;
+  font-size: clamp(3.5rem, 19vw, 8.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  background: linear-gradient(100deg, #fff 8%, #cfe0ff 48%, var(--color-glow) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 26px rgb(7 19 51 / 0.45));
 }
 
 .hero-lead {
@@ -622,6 +655,266 @@
   font-weight: 600;
   color: var(--color-brand-deep);
   backdrop-filter: blur(6px);
+}
+
+/*
+ * Каталог полотен: одна карточка на экране. Уходящая карточка уменьшается и гаснет, приходящая выезжает,
+ * фото сдвигается чуть медленнее карточки (параллакс), а тексты появляются «лесенкой».
+ * --p — положение карточки относительно текущей: 0 — на экране, ±1 — соседняя (меняется и при перетаскивании пальцем).
+ */
+.cat-viewport {
+  overflow: hidden;
+  border-radius: var(--radius-media);
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 4px;
+  }
+}
+
+.cat[data-dragging] .cat-viewport {
+  cursor: grabbing;
+}
+
+.cat-track {
+  display: flex;
+  transition: transform 0.7s cubic-bezier(0.22, 0.85, 0.25, 1);
+}
+
+.cat[data-dragging] .cat-track,
+.cat[data-dragging] .cat-slide,
+.cat[data-dragging] .cat-photo img {
+  transition: none;
+}
+
+.cat-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 0.5rem 0.5rem 1.25rem;
+  opacity: calc(1 - min(1, abs(var(--p))) * 0.6);
+  transform: scale(calc(1 - min(1, abs(var(--p))) * 0.07));
+  transition:
+    opacity 0.6s ease,
+    transform 0.7s cubic-bezier(0.22, 0.85, 0.25, 1);
+}
+
+.cat-card {
+  display: grid;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-media);
+  background: var(--color-plane);
+  box-shadow: var(--shadow-float);
+}
+
+@media (min-width: 48rem) {
+  .cat-card {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+}
+
+.cat-photo {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-haze);
+
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transform: translate3d(calc(var(--p) * -14%), 0, 0) scale(1.12);
+    transition: transform 0.8s cubic-bezier(0.22, 0.85, 0.25, 1);
+  }
+}
+
+@media (min-width: 48rem) {
+  .cat-photo img {
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+}
+
+.cat-count {
+  position: absolute;
+  right: 0.875rem;
+  bottom: 0.875rem;
+  border-radius: 999px;
+  background: rgb(7 19 51 / 0.62);
+  padding: 0.25rem 0.7rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(6px);
+}
+
+.cat-info {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+@media (min-width: 40rem) {
+  .cat-info {
+    padding: 2rem;
+  }
+}
+
+.cat-slide .cat-rise {
+  opacity: 0;
+  transform: translate3d(0, 0.875rem, 0);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.cat-slide[data-active] .cat-rise {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.55s ease calc(0.18s + var(--d, 0) * 0.07s),
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.18s + var(--d, 0) * 0.07s);
+}
+
+.cat-tabs {
+  display: flex;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.cat-arrow {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--color-plane);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    transform 0.15s,
+    opacity 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--color-ink);
+    color: #fff;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.cat-hint {
+  transition: opacity 0.4s;
+
+  &[data-hidden] {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-track,
+  .cat-slide,
+  .cat-photo img,
+  .cat-slide .cat-rise,
+  .cat-slide[data-active] .cat-rise {
+    transition: none;
+  }
+}
+
+/* Окно заказа: на телефоне выезжает снизу, на компьютере — по центру */
+.order-dialog {
+  position: fixed;
+  inset: auto 0 0 0;
+  width: 100%;
+  max-width: none;
+  max-height: 92svh;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--color-plane);
+  padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  color: var(--color-ink);
+  box-shadow: 0 -12px 48px rgb(7 19 51 / 0.35);
+
+  &:not([open]) {
+    display: none;
+  }
+
+  &::backdrop {
+    background: rgb(7 19 51 / 0.6);
+    backdrop-filter: blur(3px);
+  }
+}
+
+@media (min-width: 40rem) {
+  .order-dialog {
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    max-width: 40rem;
+    border-radius: var(--radius-media);
+    padding: 1.75rem;
+    box-shadow: 0 24px 80px rgb(7 19 51 / 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .order-dialog[open] {
+    animation: order-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .order-dialog[open]::backdrop {
+    animation: order-fade 0.35s ease;
+  }
+}
+
+@keyframes order-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 2.5rem, 0);
+  }
+}
+
+@keyframes order-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+html:has(.order-dialog[open]) {
+  overflow: hidden;
+}
+
+.order-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
 }
 
 /* «До / после»: два кадра рядом, подпись-метка в углу каждого */

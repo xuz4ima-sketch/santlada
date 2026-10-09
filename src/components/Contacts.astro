@@ -8,9 +8,9 @@ import { waLink } from '../lib/whatsapp';
 <section id="kontakty" class="page scroll-mt-20" data-tone="deep" data-fx="curtain-up" data-reveal aria-labelledby="kontakty-title">
   <div class="container-page grid py-16 lg:py-24 grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
     <div data-rise="left">
-      <h2 id="kontakty-title" class="h-section">Запишитесь на бесплатный замер</h2>
+      <h2 id="kontakty-title" class="h-section">Закажите потолок</h2>
       <p class="lead mt-3">
-        Оставьте заявку — Иса ответит в WhatsApp, договорится о времени, приедет и всё рассчитает на месте.
+        Выберите полотно и оставьте заявку — она придёт мне в WhatsApp. Я отвечу, договоримся о времени, приеду на бесплатный замер и всё рассчитаю на месте.
       </p>
       <ul class="mt-8 grid gap-3">
         <li>
@@ -44,7 +44,7 @@ import { waLink } from '../lib/whatsapp';
     </div>
 
     <div class="card-light rounded-[var(--radius-card)] bg-plane p-5 ring-1 ring-mist sm:p-7" data-spot data-rise="right">
-      <QuickMeasure client:visible />
+      <QuickMeasure client:load />
     </div>
   </div>
 </section>

@@ -3,19 +3,21 @@ import { buildLikeMessage, buildMeasureMessage, emptyContact, waLink, workUrl } 
 
 const contact = { ...emptyContact, name: 'Магомед', city: 'Хасавюрт', when: 'В выходные' };
 
-describe('запись на замер', () => {
+describe('заказ и запись на замер', () => {
   it('содержит контакты, полотно и комментарий', () => {
     const text = buildMeasureMessage({ ...contact, canvas: 'BAUF', comment: 'Три комнаты' });
-    expect(text).toContain('*Запись на бесплатный замер — SANTLADA*');
+    expect(text).toContain('*Заказ натяжного потолка — SANTLADA*');
     expect(text).toContain('Имя: Магомед');
     expect(text).toContain('Адрес: Хасавюрт');
     expect(text).toContain('Замер: в выходные');
-    expect(text).toContain('Полотно: BAUF');
+    expect(text).toContain('Полотно: BAUF, 650 ₽/м²');
     expect(text).toContain('Что нужно: Три комнаты');
   });
 
-  it('без выбранного полотна просит совет', () => {
-    expect(buildMeasureMessage({ ...emptyContact, city: 'Кизляр' })).toContain('Полотно: посоветуйте');
+  it('без выбранного полотна — запись на замер, просит совет', () => {
+    const text = buildMeasureMessage({ ...emptyContact, city: 'Кизляр' });
+    expect(text).toContain('*Запись на бесплатный замер — SANTLADA*');
+    expect(text).toContain('Полотно: посоветуйте');
   });
 
   it('не пишет пустые поля', () => {

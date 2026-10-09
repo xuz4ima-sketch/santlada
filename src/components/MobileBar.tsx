@@ -5,7 +5,6 @@ import { IconPhone, IconWhatsApp } from './icons';
 /** Нижняя панель на телефоне и круглая кнопка WhatsApp на компьютере */
 export default function MobileBar() {
   const wa = waLink('Здравствуйте! Пишу с сайта по поводу натяжного потолка.');
-  const project = waLink('Здравствуйте! Хочу обсудить проект натяжного потолка.');
 
   return (
     <>
@@ -17,9 +16,8 @@ export default function MobileBar() {
           <a href={`tel:+${site.phoneDigits}`} className="btn-ghost min-h-12 px-3.5" aria-label={`Позвонить: ${site.phone}`}>
             <IconPhone size={20} />
           </a>
-          <a href={project} target="_blank" rel="noopener" className="btn-wa btn-shine min-h-12">
-            <IconWhatsApp size={20} />
-            Обсудить проект
+          <a href={`${import.meta.env.BASE_URL}#ceny`} className="btn-primary btn-shine min-h-12">
+            Заказать полотно
           </a>
         </div>
       </nav>

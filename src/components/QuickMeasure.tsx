@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { canvases } from '../config/canvases';
 import { measureTimes, site } from '../config/site';
 import { buildMeasureMessage, emptyContact, waLink, type Contact } from '../lib/whatsapp';
@@ -6,9 +6,17 @@ import { IconWhatsApp } from './icons';
 
 const OTHER = '__other';
 
-/** Короткая запись на замер — уходит в WhatsApp */
-export default function QuickMeasure() {
-  const [contact, setContact] = useState<Contact>(emptyContact);
+interface Props {
+  /** Полотно, выбранное в каталоге */
+  canvas?: string;
+  /** Полотно уже выбрано в каталоге — выбор полотна в форме не показываем */
+  locked?: boolean;
+}
+
+/** Заказ полотна и запись на замер — заявка уходит мастеру в WhatsApp */
+export default function QuickMeasure({ canvas = '', locked = false }: Props) {
+  const uid = useId();
+  const [contact, setContact] = useState<Contact>({ ...emptyContact, canvas });
   const [otherCity, setOtherCity] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -17,21 +25,22 @@ export default function QuickMeasure() {
   const set = (patch: Partial<Contact>) => setContact((c) => ({ ...c, ...patch }));
   const listed = site.cities.includes(contact.city);
   const cityValue = listed ? contact.city : otherCity || contact.city ? OTHER : '';
+  const ordering = Boolean(contact.canvas);
 
   return (
-    <form className="grid gap-4" onSubmit={(e) => e.preventDefault()} noValidate aria-label="Запись на бесплатный замер">
+    <form className="grid gap-4" onSubmit={(e) => e.preventDefault()} noValidate aria-label={ordering ? 'Заказ полотна' : 'Запись на бесплатный замер'}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="qm-city" className="label">
+          <label htmlFor={`${uid}-city`} className="label">
             Город или район
           </label>
           <select
-            id="qm-city"
+            id={`${uid}-city`}
             ref={selectRef}
             className="field select-field"
             value={cityValue}
             aria-invalid={Boolean(error) || undefined}
-            aria-describedby={error ? 'qm-city-error' : undefined}
+            aria-describedby={error ? `${uid}-city-error` : undefined}
             onChange={(e) => {
               setError('');
               if (e.target.value === OTHER) {
@@ -66,17 +75,17 @@ export default function QuickMeasure() {
             />
           )}
           {error && (
-            <p id="qm-city-error" className="mt-1.5 text-[0.875rem] font-medium text-danger">
+            <p id={`${uid}-city-error`} className="mt-1.5 text-[0.875rem] font-medium text-danger">
               {error}
             </p>
           )}
         </div>
         <div>
-          <label htmlFor="qm-name" className="label">
+          <label htmlFor={`${uid}-name`} className="label">
             Как к вам обращаться
           </label>
           <input
-            id="qm-name"
+            id={`${uid}-name`}
             className="field"
             autoComplete="given-name"
             placeholder="Имя"
@@ -97,26 +106,28 @@ export default function QuickMeasure() {
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend className="label">Полотно</legend>
-        <div className="flex flex-wrap gap-2">
-          {canvases.map((c) => (
-            <button key={c.id} type="button" className="chip" aria-pressed={contact.canvas === c.name} onClick={() => set({ canvas: contact.canvas === c.name ? '' : c.name })}>
-              {c.name}
+      {!locked && (
+        <fieldset>
+          <legend className="label">Полотно</legend>
+          <div className="flex flex-wrap gap-2">
+            {canvases.map((c) => (
+              <button key={c.id} type="button" className="chip" aria-pressed={contact.canvas === c.name} onClick={() => set({ canvas: contact.canvas === c.name ? '' : c.name })}>
+                {c.name}
+              </button>
+            ))}
+            <button type="button" className="chip" aria-pressed={contact.canvas === ''} onClick={() => set({ canvas: '' })}>
+              Посоветуйте
             </button>
-          ))}
-          <button type="button" className="chip" aria-pressed={contact.canvas === ''} onClick={() => set({ canvas: '' })}>
-            Посоветуйте
-          </button>
-        </div>
-      </fieldset>
+          </div>
+        </fieldset>
+      )}
 
       <div>
-        <label htmlFor="qm-comment" className="label">
+        <label htmlFor={`${uid}-comment`} className="label">
           Что нужно сделать
         </label>
         <textarea
-          id="qm-comment"
+          id={`${uid}-comment`}
           className="field min-h-[5.5rem] resize-y"
           placeholder="Например, две комнаты и кухня, хочу световые линии. Фото понравившегося потолка можно прислать в чате"
           value={contact.comment}
@@ -132,7 +143,7 @@ export default function QuickMeasure() {
         onClick={(e) => {
           if (!contact.city.trim()) {
             e.preventDefault();
-            setError('Выберите город — так Иса поймёт, куда ехать на замер.');
+            setError('Выберите город — так я пойму, куда ехать на замер.');
             selectRef.current?.focus();
             return;
           }
@@ -140,11 +151,11 @@ export default function QuickMeasure() {
         }}
       >
         <IconWhatsApp size={20} />
-        Записаться на замер в WhatsApp
+        {ordering ? 'Отправить заказ мастеру' : 'Записаться на замер'}
       </a>
       {sent && (
         <p className="text-[0.9375rem] text-ink-soft" role="status">
-          Открыли WhatsApp с текстом заявки. Нажмите «Отправить» в чате и, если есть, приложите фото потолка, который понравился. Иса ответит и договорится о времени.
+          Открыли WhatsApp с текстом заказа. Нажмите «Отправить» в чате — заявка придёт мне, и, если есть фото потолка, который понравился, приложите его. Я отвечу и договорюсь с вами о времени.
         </p>
       )}
     </form>

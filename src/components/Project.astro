@@ -1,31 +1,28 @@
 ---
-import { IconWhatsApp } from './icons';
 import { extras, steps } from '../config/site';
-import { waLink } from '../lib/whatsapp';
 
 // Вместо калькулятора: клиент приходит с примером или без, а дизайн и дополнения обсуждает с мастером
 const ways = [
   {
     title: 'Есть пример, который нравится',
-    text: 'Пришлите фото потолка — из интернета или с этого сайта. Иса скажет, как сделать такой же в вашей комнате.',
+    text: 'Пришлите фото потолка — из интернета или с этого сайта. Скажу, как сделать такой же в вашей комнате.',
   },
   {
     title: 'Нет идеи — не страшно',
-    text: 'Иса сам предложит дизайн: посмотрит комнату и подберёт полотно, профиль и свет под её форму.',
+    text: 'Дизайн предложу сам: посмотрю комнату и подберу полотно, профиль и свет под её форму.',
   },
   {
     title: 'Дополнения — по месту',
-    text: 'Подсветку, линии, карниз и светильники Иса посоветует на замере — с учётом мебели, окон и проводки.',
+    text: 'Подсветку, линии, карниз и светильники посоветую на замере — с учётом мебели, окон и проводки.',
   },
 ];
-const wa = waLink('Здравствуйте! Хочу обсудить проект натяжного потолка.');
 ---
 
 <section id="proekt" class="page scroll-mt-20" data-tone="tint" data-fx="slant" data-reveal aria-labelledby="proekt-title">
   <div class="container-page py-16 lg:py-24">
     <div class="max-w-2xl" data-rise>
-      <h2 id="proekt-title" class="h-section">Проект — вместе с мастером</h2>
-      <p class="lead mt-3">Считать самому не нужно. Напишите Исе — дальше он ведёт проект от идеи до монтажа.</p>
+      <h2 id="proekt-title" class="h-section">Проект — решаем вместе</h2>
+      <p class="lead mt-3">Считать самому не нужно. Выберите полотно и закажите — дальше я веду проект от идеи до монтажа.</p>
     </div>
 
     <ol class="mt-10 grid gap-4 md:grid-cols-3 lg:gap-6">
@@ -48,10 +45,7 @@ const wa = waLink('Здравствуйте! Хочу обсудить прое�
     </div>
 
     <div class="mt-8 flex flex-wrap gap-3" data-rise>
-      <a href={wa} target="_blank" rel="noopener" class="btn-wa btn-shine" data-magnet>
-        <IconWhatsApp size={20} />
-        Обсудить проект в WhatsApp
-      </a>
+      <a href="#ceny" class="btn-primary btn-shine" data-magnet>Заказать полотно</a>
       <a href="#kontakty" class="btn-ghost">Записаться на замер</a>
     </div>
 

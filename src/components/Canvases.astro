@@ -1,14 +1,29 @@
 ---
-import { Image } from 'astro:assets';
+import { getImage } from 'astro:assets';
+import CanvasCatalog, { type CatalogItem } from './CanvasCatalog';
 import { canvases } from '../config/canvases';
-import { waLink } from '../lib/whatsapp';
-import { IconWhatsApp } from './icons';
 
 // Фото карточек — src/assets/canvases/<photo>; цены и тексты — src/config/canvases.ts
 const photos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/canvases/*.{jpg,jpeg,png,webp}', { eager: true });
 const photoFor = (file: string) => Object.entries(photos).find(([p]) => p.endsWith(`/${file}`))?.[1].default;
-const rub = new Intl.NumberFormat('ru-RU').format;
-const ask = (name: string) => waLink(`Здравствуйте! Интересует натяжной потолок из полотна ${name}. Подскажите по проекту.`);
+
+const items: CatalogItem[] = await Promise.all(
+  canvases.map(async (c) => {
+    const src = photoFor(c.photo);
+    const img = src && (await getImage({ src, widths: [480, 720, 1080].filter((w) => w <= src.width), format: 'webp', quality: 76 }));
+    return {
+      id: c.id,
+      name: c.name,
+      nameRu: c.nameRu,
+      origin: c.origin,
+      price: c.price,
+      badge: c.badge,
+      description: c.description,
+      points: c.points,
+      photo: src && img ? { src: img.src, srcset: img.srcSet.attribute, width: src.width, height: src.height } : undefined,
+    };
+  }),
+);
 ---
 
 <section id="ceny" class="page scroll-mt-20" data-tone="tint" data-fx="curtain-up" data-reveal aria-labelledby="ceny-title">
@@ -16,72 +31,18 @@ const ask = (name: string) => waLink(`Здравствуйте! Интересу
     <div class="max-w-2xl" data-rise>
       <h2 id="ceny-title" class="h-section">Полотна и цены</h2>
       <p class="lead mt-3">
-        Иса работает с тремя полотнами — от надёжного на каждый день до немецкого премиума. Цена — за 1 м² полотна.
+        Я работаю с тремя полотнами — от надёжного на каждый день до немецкого премиума. Листайте каталог, выбирайте
+        полотно и заказывайте. Цена — за 1 м² полотна.
       </p>
     </div>
 
-    <ul class="mt-10 grid gap-5 md:grid-cols-3 lg:gap-6">
-      {
-        canvases.map((c, i) => {
-          const photo = photoFor(c.photo);
-          return (
-            <li class="canvas-card" data-spot data-rise style={`--i:${i}`}>
-              <div class="relative overflow-hidden rounded-t-[var(--radius-card)] bg-haze">
-                {photo && (
-                  <Image
-                    src={photo}
-                    alt={`Натяжной потолок, полотно ${c.name}`}
-                    widths={[400, 600, 800]}
-                    sizes="(min-width: 1200px) 370px, (min-width: 768px) 31vw, 100vw"
-                    format="webp"
-                    quality={76}
-                    class="aspect-[4/3] w-full object-cover"
-                  />
-                )}
-                {c.badge && <span class="canvas-badge">{c.badge}</span>}
-              </div>
+    <div class="mt-10" data-rise>
+      <CanvasCatalog client:load items={items} />
+    </div>
 
-              <div class="flex flex-1 flex-col p-5 sm:p-6">
-                <p class="text-[0.8125rem] font-medium tracking-wide text-ink-soft uppercase">{c.origin}</p>
-                <h3 class="mt-1.5 font-display text-[1.625rem] leading-tight font-semibold tracking-[-0.02em]">
-                  {c.name}
-                  <span class="ml-1 align-middle font-sans text-[0.9375rem] font-normal tracking-normal text-ink-soft">
-                    {c.nameRu}
-                  </span>
-                </h3>
-                <p class="mt-3 flex items-baseline gap-1.5">
-                  <b class="font-display text-[2.25rem] leading-none font-semibold tracking-[-0.03em] text-brand tabular-nums">
-                    {rub(c.price)} ₽
-                  </b>
-                  <span class="text-[0.9375rem] text-ink-soft">за м²</span>
-                </p>
-                <p class="mt-4 text-[0.9375rem] leading-relaxed text-ink-soft">{c.description}</p>
-                <ul class="mt-4 grid gap-2 text-[0.9375rem]">
-                  {c.points.map((p) => (
-                    <li class="flex gap-2.5">
-                      <svg class="mt-[0.3em] shrink-0 text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="m5 12 5 5 9-10" />
-                      </svg>
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-                <div class="mt-auto pt-6">
-                  <a href={ask(c.name)} target="_blank" rel="noopener" class="btn-ghost w-full">
-                    <IconWhatsApp size={18} class="text-wa" />
-                    Спросить про {c.name}
-                  </a>
-                </div>
-              </div>
-            </li>
-          );
-        })
-      }
-    </ul>
-
-    <p class="mt-6 max-w-3xl text-[0.9375rem] leading-relaxed text-ink-soft" data-rise>
-      Профиль, подсветка, световые линии, светильники и карниз считаются отдельно — они зависят от проекта. Итоговую сумму Иса
-      назовёт после бесплатного замера, до начала работ.
+    <p class="mt-4 max-w-3xl text-[0.9375rem] leading-relaxed text-ink-soft" data-rise>
+      Профиль, подсветка, световые линии, светильники и карниз считаются отдельно — они зависят от проекта. Итоговую сумму
+      называю после бесплатного замера, до начала работ.
     </p>
   </div>
 </section>

@@ -1,3 +1,4 @@
+import { canvases } from '../config/canvases';
 import { site } from '../config/site';
 
 export interface Contact {
@@ -19,13 +20,15 @@ export function workUrl(id: string, origin: string = site.url): string {
   return `${origin.replace(/\/$/, '')}/#${id}`;
 }
 
-/** Текст заявки на замер */
+/** Текст заказа: с выбранным полотном — заказ, без него — просто запись на замер */
 export function buildMeasureMessage(contact: Contact): string {
-  const lines = [`*Запись на бесплатный замер — ${site.brand}*`];
+  const canvas = clean(contact.canvas);
+  const info = canvases.find((c) => c.name === canvas);
+  const lines = [canvas ? `*Заказ натяжного потолка — ${site.brand}*` : `*Запись на бесплатный замер — ${site.brand}*`];
   if (clean(contact.name)) lines.push(`Имя: ${clean(contact.name)}`);
   if (clean(contact.city)) lines.push(`Адрес: ${clean(contact.city)}`);
   if (clean(contact.when)) lines.push(`Замер: ${clean(contact.when).toLowerCase()}`);
-  lines.push(`Полотно: ${clean(contact.canvas) || 'посоветуйте'}`);
+  lines.push(`Полотно: ${canvas ? (info ? `${canvas}, ${info.price} ₽/м²` : canvas) : 'посоветуйте'}`);
 
   const blocks = [lines];
   if (clean(contact.comment)) blocks.push([`Что нужно: ${clean(contact.comment)}`]);
