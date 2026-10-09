@@ -205,11 +205,14 @@
 }
 
 /*
- * Первый экран — фото потолка (src/assets/hero/ceiling.jpg: потолок с подсветкой в верхней части кадра).
- * Фото сверху, внизу растворяется в тёмно-синий цвет, на котором лежит белый текст.
- * Шапка поверх фото светлая, после небольшой прокрутки становится плотной и тёмной.
+ * Первый экран — настоящий снимок потолка на всю ширину (src/assets/hero/ceiling.jpg).
+ * Поверх фото — синяя тонировка в цвет сайта: сверху под шапкой, слева под текстом и внизу, где лежат факты.
+ * Заголовок — тонким начертанием цвета «жемчуг» (--color-pearl): тёплый белый на синей тонировке
+ * выглядит дороже чистого #fff и не повторяет цвета кнопок и карточек ниже по странице.
+ * Шапка поверх фото светлая до прокрутки, после небольшой прокрутки становится плотной.
  */
 .hero {
+  --color-pearl: #f6f1e8;
   position: relative;
   isolation: isolate;
   display: flex;
@@ -217,12 +220,12 @@
   overflow: hidden;
   min-height: max(34rem, 100svh);
   background: var(--color-night);
-  color: #fff;
+  color: var(--color-pearl);
 }
 
 @media (min-width: 64rem) {
   .hero {
-    min-height: clamp(38rem, 92svh, 56rem);
+    min-height: clamp(40rem, 94svh, 58rem);
   }
 }
 
@@ -231,40 +234,42 @@
   inset: 0 0 auto 0;
   z-index: -2;
   width: 100%;
-  height: 72%;
+  height: 56%;
   object-fit: cover;
-  object-position: 46% 0;
-  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  object-position: 47% 50%;
+  /* На телефоне снимок занимает верх экрана и растворяется в синий — текст лежит на чистом фоне */
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
 }
 
-@media (min-width: 64rem) {
-  .hero-photo {
-    left: 30%;
-    width: 70%;
-    height: 100%;
-    object-position: 50% 0;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-
-/* Затемнение сверху (под шапкой) и снизу (под текстом) */
+/* Тонировка: общий синий тон + затемнение под шапкой, под текстом слева и внизу */
 .hero-shade {
   position: absolute;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(to bottom, rgb(7 19 51 / 0.62), rgb(7 19 51 / 0) 22%),
-    linear-gradient(to bottom, rgb(7 19 51 / 0) 40%, rgb(7 19 51 / 0.7) 66%, var(--color-night) 90%);
+    linear-gradient(to bottom, rgb(7 19 51 / 0.6), rgb(7 19 51 / 0) 24%),
+    linear-gradient(to bottom, rgb(7 19 51 / 0) 35%, rgb(7 19 51 / 0.7) 62%, var(--color-night) 85%),
+    rgb(15 43 107 / 0.22);
 }
 
 @media (min-width: 64rem) {
+  /* На компьютере снимок смещён вправо и плавно растворяется слева — люстра остаётся справа от текста */
+  .hero-photo {
+    left: 22%;
+    width: 78%;
+    height: 100%;
+    object-position: 50% 50%;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 32%);
+    mask-image: linear-gradient(to right, transparent 0, #000 32%);
+  }
+
   .hero-shade {
     background:
-      linear-gradient(to bottom, rgb(7 19 51 / 0.55), rgb(7 19 51 / 0) 20%),
-      linear-gradient(to right, var(--color-night) 28%, rgb(7 19 51 / 0.55) 42%, rgb(7 19 51 / 0) 64%),
-      linear-gradient(to bottom, rgb(7 19 51 / 0) 70%, var(--color-night) 100%);
+      linear-gradient(to bottom, rgb(7 19 51 / 0.5), rgb(7 19 51 / 0) 20%),
+      linear-gradient(to right, rgb(7 19 51 / 0.55) 0%, rgb(7 19 51 / 0) 55%),
+      linear-gradient(to bottom, rgb(7 19 51 / 0) 62%, rgb(7 19 51 / 0.88) 100%),
+      rgb(15 43 107 / 0.16);
   }
 }
 
@@ -275,69 +280,38 @@
 
 @media (min-width: 64rem) {
   .hero-body {
-    padding-bottom: 5rem;
+    padding-bottom: 2.75rem;
   }
 }
 
 .hero-title {
-  margin-left: -0.04em;
   font-family: var(--font-display);
-  line-height: 1;
-  color: #fff;
-  text-shadow: 0 2px 28px rgb(7 19 51 / 0.5);
+  font-size: clamp(2.375rem, 9.6vw, 5.5rem);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--color-pearl);
+  text-shadow: 0 2px 36px rgb(7 19 51 / 0.55);
 }
 
-.hero-title span {
+.hero-line {
   display: block;
 }
 
-/* Santlada — крупно, плотным начертанием и с голубым переливом, чтобы отличаться от строки выше */
-.hero-brand {
-  margin-top: 0.15em;
-  font-size: clamp(3.5rem, 19vw, 8.5rem);
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.045em;
-  background: linear-gradient(100deg, #fff 8%, #cfe0ff 48%, var(--color-glow) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: none;
-  filter: drop-shadow(0 4px 26px rgb(7 19 51 / 0.45));
+@media (max-width: 40rem) {
+  /* Вторая строка длиннее — на узком экране слегка уменьшаем, чтобы не переносилась */
+  .hero-line + .hero-line {
+    font-size: 0.86em;
+  }
 }
 
 .hero-lead {
-  max-width: 27ch;
-  margin-top: 1rem;
-  font-size: clamp(1.0625rem, 3.6vw, 1.5rem);
-  font-weight: 500;
-  line-height: 1.4;
-  color: rgb(255 255 255 / 0.9);
-  text-shadow: 0 1px 16px rgb(7 19 51 / 0.6);
-}
-
-.hero-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem 1.5rem;
-  margin-top: 1.125rem;
-  font-size: 0.9375rem;
-  color: rgb(255 255 255 / 0.78);
-
-  & li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  & li::before {
-    content: '';
-    width: 0.375rem;
-    height: 0.375rem;
-    border-radius: 50%;
-    background: var(--color-glow);
-    box-shadow: 0 0 8px 1px var(--color-glow);
-  }
+  max-width: 34ch;
+  margin-top: 1.25rem;
+  font-size: clamp(1.0625rem, 3.6vw, 1.3125rem);
+  line-height: 1.5;
+  color: rgb(246 241 232 / 0.86);
+  text-shadow: 0 1px 18px rgb(7 19 51 / 0.65);
 }
 
 .hero-actions {
@@ -356,25 +330,25 @@
 
 .hero .hero-more {
   flex: 1 1 auto;
-  background: #fff;
-  color: var(--color-brand-deep);
+  background: var(--color-pearl);
+  color: var(--color-night);
 
   &:hover {
-    background: var(--color-haze);
+    background: #fff;
   }
 }
 
 /* Вторая кнопка — прозрачная со светлой рамкой */
 .hero .hero-cta {
   flex: 1 1 auto;
-  background: rgb(255 255 255 / 0.08);
-  color: #fff;
-  --tw-ring-color: rgb(255 255 255 / 0.55);
+  background: rgb(246 241 232 / 0.08);
+  color: var(--color-pearl);
+  --tw-ring-color: rgb(246 241 232 / 0.5);
   backdrop-filter: blur(8px);
 
   &:hover {
-    background: rgb(255 255 255 / 0.16);
-    --tw-ring-color: #fff;
+    background: rgb(246 241 232 / 0.16);
+    --tw-ring-color: var(--color-pearl);
   }
 }
 
@@ -382,6 +356,69 @@
   .hero .hero-more,
   .hero .hero-cta {
     flex: 0 0 auto;
+  }
+}
+
+/* Факты: на телефоне — короткие строки с огоньком, на компьютере — три колонки под тонкой линией на всю ширину */
+.hero-facts {
+  display: grid;
+  gap: 0.375rem;
+  margin-top: 1.75rem;
+  font-size: 0.9375rem;
+  color: rgb(246 241 232 / 0.82);
+
+  & li {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  & li::before {
+    content: '';
+    flex: none;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background: var(--color-glow);
+    box-shadow: 0 0 8px 1px var(--color-glow);
+  }
+
+  & strong {
+    font-weight: 600;
+    color: var(--color-pearl);
+  }
+
+  & span {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .hero-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgb(246 241 232 / 0.24);
+
+    & li {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    & li::before {
+      display: none;
+    }
+
+    & strong {
+      font-size: 1.0625rem;
+    }
+
+    & span {
+      display: block;
+      line-height: 1.4;
+    }
   }
 }
 
@@ -638,8 +675,35 @@
  */
 .cs-scroller {
   --pin-h: calc(100svh - var(--hdr) - var(--bar));
+  /* Сколько прокрутки на одну сцену: на телефоне — побольше, чтобы один взмах пальца не пролистывал всю историю */
+  --per: 78svh;
   position: relative;
-  height: calc(var(--pin-h) + var(--steps) * 60svh);
+  height: calc(var(--pin-h) + var(--steps) * var(--per));
+}
+
+@media (min-width: 64rem) {
+  .cs-scroller {
+    --per: 60svh;
+  }
+}
+
+/*
+ * Невидимые ступеньки: i-я лежит там, где i-я сцена должна быть на экране. Середина экрана пересекает ступеньку —
+ * сцена меняется (IntersectionObserver в CanvasStory.tsx). Сдвиг 50svh − шапка: карточка прилипает под шапкой,
+ * а линия-«датчик» стоит посередине экрана. svh не меняется, когда на iPhone прячется адресная строка.
+ */
+.cs-rungs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.cs-rung {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--i) * var(--per) + 50svh - var(--hdr));
+  height: var(--per);
 }
 
 .cs-pin {
@@ -647,8 +711,6 @@
   top: var(--hdr);
   height: var(--pin-h);
   padding-block: 0.75rem;
-  /* Своя плёнка для прилипшей карточки: при прокрутке телефон двигает её целиком, ничего не перерисовывая */
-  will-change: transform;
 }
 
 .cs-wrap {
@@ -1675,11 +1737,16 @@
   gap: 0.3rem;
   visibility: hidden;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(12px);
   transition:
     opacity 0.2s ease,
     transform 0.2s ease,
     visibility 0s linear 0.2s;
+
+  /* Уже показанные сцены уходят вверх, следующие приходят снизу — как движется страница при прокрутке */
+  &[data-before] {
+    transform: translateY(-12px);
+  }
 
   &[data-current] {
     visibility: visible;
@@ -1883,66 +1950,6 @@
 
   .cs-info {
     gap: 0.5rem;
-  }
-}
-
-/*
- * Телефон и планшет: свайп (тот же запрос — SWIPE_MQ в CanvasStory.tsx).
- * Карточка не прилипает: страница листается как обычно, а сцены листаются свайпом по картинке —
- * один свайп, одна сцена. Пока палец ведёт, сцена едет за ним (data-drag), отпустил — плавно возвращается,
- * а кусочек полотна уже переходит в положение новой сцены. Текст новой сцены въезжает с той стороны,
- * куда листали: сцены до текущей ждут слева (data-before), после — справа.
- * Высота карточки та же, что была у прилипшей, — она целиком помещается на экран.
- */
-@media (max-width: 63.99rem), (hover: none) {
-  .cs-scroller {
-    height: auto;
-  }
-
-  .cs-pin {
-    position: relative;
-    top: auto;
-    height: auto;
-    will-change: auto;
-  }
-
-  .cs-wrap {
-    height: auto;
-  }
-
-  .cs-card {
-    height: min(var(--pin-h) - 1.5rem, 46rem);
-  }
-
-  @media (min-width: 48rem) {
-    .cs-card {
-      height: min(var(--pin-h) - 1.5rem, 34rem);
-    }
-  }
-
-  .cs-stage {
-    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-
-    &[data-drag] {
-      transition: none;
-    }
-  }
-
-  .cs-scene {
-    transform: translateX(1.75rem);
-
-    &[data-before] {
-      transform: translateX(-1.75rem);
-    }
-
-    &[data-current] {
-      transform: none;
-    }
-  }
-
-  /* Подсказка «Листайте вбок»: стрелки смотрят вправо и бегут вбок */
-  .cs-swipehint i {
-    rotate: -90deg;
   }
 }
 

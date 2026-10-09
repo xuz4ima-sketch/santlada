@@ -30,7 +30,7 @@ npm run dev        # открыть сайт: http://localhost:4321
 | Фото работ | папки `src/assets/works/<вид>/` |
 | Видео работ | папки `src/assets/videos/<вид>/` |
 | Фото «до / после» | `src/assets/before-after/` |
-| Фото на первом экране (светлое, потолок в верхней части кадра, от 1600 px по ширине) | `src/assets/hero/ceiling.jpg` |
+| Фото на первом экране (настоящий снимок потолка, лучше с подсветкой, от 1600 px по ширине; поверх него идёт синяя тонировка) | `src/assets/hero/ceiling.jpg` |
 | Текст на первом экране | `src/components/Hero.astro` |
 | **Цвета сайта**: акцент `--color-brand`, светлый фон блоков `--color-page-tint`, тёмный фон блоков `--color-brand-deep` | `src/styles/global.css`, в самом начале |
 | Какого цвета блок: в начале файла блока `data-tone="white"`, `"tint"` (светло-синий) или `"deep"` (тёмно-синий). Соседние блоки лучше делать разными | `src/components/*.astro` |

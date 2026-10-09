@@ -8,12 +8,11 @@ import { IconChevronLeft, IconChevronRight, IconWhatsApp } from './icons';
  * «Полотна и цены» — история из сцен: кусочек полотна поворачивается, его меряет штангенциркуль,
  * раскатывается рулон и т. д. Действие сцены — CSS-переходы по transform и opacity, доигрывают сами.
  *
- * Компьютер: карточка стоит на месте (sticky), а прокрутка страницы переключает сцены.
- * Полотна листаются вкладками, стрелками или свайпом.
- * Телефон и планшет (SWIPE_MQ): карточка — обычный блок, страница листается как везде.
- * Сцены листаются свайпом по картинке: один свайп — ровно одна сцена, картинка идёт за пальцем,
- * после последней сцены — следующее полотно. Нажатие справа — дальше, слева — назад.
- * Прилипание при прокрутке на iPhone дёргало страницу и проскакивало по нескольку сцен за взмах.
+ * И на компьютере, и на телефоне одинаково: карточка стоит на месте (sticky), а прокрутка страницы снизу вверх
+ * переключает сцены. Номер сцены определяет не обработчик прокрутки, а IntersectionObserver: под карточкой лежат
+ * невидимые «ступеньки» (по одной на сцену), и та, что пересекает середину экрана, — текущая. Так при прокрутке
+ * скрипт ничего не считает и не мерит, страница не дёргается; новая сцена просто запускает CSS-переход.
+ * Полотна листаются вкладками, стрелками или горизонтальным свайпом по картинке.
  * Сцены и тексты — в src/config/canvases.ts, анимации — в global.css (раздел «Полотна: история»).
  */
 
@@ -22,11 +21,6 @@ const num = (n: number, digits = 2) => new Intl.NumberFormat('ru-RU', { maximumF
 const meters = (n: number) => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 }).format(n);
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pct = (part: number, whole: number) => `${(part / whole) * 100}%`;
-
-/** Где сцены листаются свайпом. Тот же запрос — в global.css (раздел «Телефон и планшет: свайп») */
-const SWIPE_MQ = '(max-width: 63.99rem), (hover: none)';
-/** Сколько пикселей провести пальцем, чтобы сцена сменилась */
-const SWIPE_MIN = 40;
 
 /** Кусочек полотна: лицевая сторона и четыре торца */
 function Swatch({ finish, mark }: { finish: Finish; mark?: string }) {
@@ -313,12 +307,9 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0);
   const [finish, setFinish] = useState<Record<string, Finish>>({});
-  // swipe — режим телефона и планшета: сцены листаются свайпом, а не прокруткой
-  const [swipe, setSwipe] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
-  const sticky = useRef<HTMLDivElement>(null);
-  const visual = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; y: number; on: boolean } | null>(null);
+  const rungs = useRef<(HTMLDivElement | null)[]>([]);
+  const drag = useRef<{ x: number; y: number } | null>(null);
   const steps = Math.max(...items.map((c) => c.scenes.length));
   const last = items.length - 1;
 
@@ -327,90 +318,27 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
   const scene = c.scenes[current];
   const currentFinish = finish[c.id] ?? c.finishes[0];
 
-  const go = useCallback(
-    (i: number) => {
-      setIndex(Math.max(0, Math.min(last, i)));
-      // На телефоне новое полотно начинается с первой сцены (на компьютере сцену выбирает прокрутка)
-      if (swipe) setStep(0);
-    },
-    [last, swipe],
-  );
+  const go = useCallback((i: number) => setIndex(Math.max(0, Math.min(last, i))), [last]);
 
+  // Прокрутка → номер сцены. Ступенька, которая пересекает середину экрана, — текущая сцена.
+  // Сама анимация сцены — CSS-переходы, они доигрывают до конца без скрипта.
   useEffect(() => {
-    const mq = window.matchMedia(SWIPE_MQ);
-    const sync = () => setSwipe(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
-
-  const hasNext = current < c.scenes.length - 1 || index < last;
-  const hasPrev = current > 0 || index > 0;
-
-  /** Свайп: следующая сцена, после последней — первая сцена следующего полотна; назад — так же в обратную сторону */
-  const next = () => {
-    if (!hasNext) return;
-    scroller.current?.setAttribute('data-started', '');
-    if (current < c.scenes.length - 1) setStep(current + 1);
-    else go(index + 1);
-  };
-  const prev = () => {
-    if (!hasPrev) return;
-    if (current > 0) setStep(current - 1);
-    else if (index > 0) {
-      setIndex(index - 1);
-      setStep(items[index - 1].scenes.length - 1);
-    }
-  };
-
-  // Где блок на странице. Меряем только при изменении размеров — при прокрутке читаем лишь scrollY,
-  // чтобы обработчик прокрутки не заставлял браузер пересчитывать стили на каждом кадре.
-  const geo = useRef({ start: 0, run: 1 });
-  const measure = useCallback(() => {
-    const box = scroller.current;
-    const pin = sticky.current;
-    if (!box || !pin) return;
-    const pinTop = parseFloat(getComputedStyle(pin).top) || 0;
-    geo.current = { start: box.getBoundingClientRect().top + window.scrollY - pinTop, run: Math.max(1, box.offsetHeight - pin.offsetHeight) };
-  }, []);
-
-  // Прокрутка → номер сцены. Сама анимация сцены — CSS-переходы, они доигрывают до конца без скрипта.
-  useEffect(() => {
-    if (swipe) return;
-    let raf = 0;
-    let started = false;
-    const update = () => {
-      raf = 0;
-      const { start, run } = geo.current;
-      const p = Math.min(1, Math.max(0, (window.scrollY - start) / run));
-      setStep(Math.min(steps - 1, Math.floor(p * steps)));
-      const s = p * steps > 0.12;
-      if (s !== started) {
-        started = s;
-        scroller.current?.toggleAttribute('data-started', s);
-      }
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    const onResize = () => {
-      measure();
-      onScroll();
-    };
-    measure();
-    update();
-    // Высота страницы выше блока может поменяться (догрузились фото) — перемеряем
-    const ro = new ResizeObserver(onResize);
-    ro.observe(document.documentElement);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
-    };
-  }, [steps, measure, swipe]);
+    const els = rungs.current.filter((el): el is HTMLDivElement => !!el);
+    if (!els.length || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        // Быстрый взмах пальца может принести сразу несколько записей — берём самую дальнюю из пересёкших линию
+        let pick = -1;
+        for (const e of entries) if (e.isIntersecting) pick = Math.max(pick, els.indexOf(e.target as HTMLDivElement));
+        if (pick < 0) return;
+        setStep(pick);
+        if (pick > 0) scroller.current?.setAttribute('data-started', '');
+      },
+      { rootMargin: '-50% 0px -50% 0px' },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [steps]);
 
   // Пока история на экране, нижняя панель телефона заказывает показанное полотно
   const inView = useRef(false);
@@ -433,63 +361,25 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
     if (inView.current) showCanvas(c.name);
   }, [c.name]);
 
-  // Нажатие на шаг прокручивает страницу к середине этой сцены
+  // Нажатие на шаг прокручивает страницу так, чтобы ступенька этой сцены встала на середину экрана
   const toStep = (i: number) => {
-    if (swipe) return setStep(i);
-    measure();
-    const { start, run } = geo.current;
-    window.scrollTo({ top: start + run * ((i + 0.5) / steps), behavior: reduced() ? 'auto' : 'smooth' });
-  };
-
-  // Картинка идёт за пальцем: сдвигаем сцену напрямую через style, без перерисовки React.
-  // Если листать в эту сторону некуда — тянется туго, как резинка. Отпустили — плавно возвращается (CSS).
-  const shift = (dx: number | null) => {
-    const el = visual.current?.querySelector<HTMLElement>('.cs-stage');
+    const el = rungs.current[i];
     if (!el) return;
-    if (dx === null) {
-      el.style.removeProperty('transform');
-      el.removeAttribute('data-drag');
-      return;
-    }
-    const free = dx < 0 ? hasNext : hasPrev;
-    el.setAttribute('data-drag', '');
-    el.style.transform = `translate3d(${(dx * (free ? 0.45 : 0.12)).toFixed(1)}px, 0, 0)`;
+    const box = el.getBoundingClientRect();
+    window.scrollTo({ top: window.scrollY + box.top + box.height / 2 - window.innerHeight / 2, behavior: reduced() ? 'auto' : 'smooth' });
   };
 
+  // Горизонтальный свайп по картинке — другое полотно (вертикальный жест остаётся прокруткой страницы)
   const onDown = (e: PointerEvent<HTMLDivElement>) => {
     if ((e.target as Element).closest('button, a')) return;
-    drag.current = { x: e.clientX, y: e.clientY, on: false };
-  };
-  const onMove = (e: PointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    if (!d || !swipe) return;
-    const dx = e.clientX - d.x;
-    // Ведём картинку, только когда палец явно идёт вбок, а не листает страницу
-    if (!d.on && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(e.clientY - d.y) * 1.2) d.on = true;
-    if (d.on) shift(dx);
+    drag.current = { x: e.clientX, y: e.clientY };
   };
   const onUp = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
     drag.current = null;
-    shift(null);
     if (!d) return;
     const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    const sideways = Math.abs(dx) > Math.abs(dy) * 1.2;
-    if (!swipe) {
-      if (Math.abs(dx) > 48 && sideways) go(index + (dx < 0 ? 1 : -1));
-      return;
-    }
-    if (Math.abs(dx) > SWIPE_MIN && sideways) return dx < 0 ? next() : prev();
-    // Короткое нажатие по картинке: слева — назад, справа — дальше
-    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) return;
-    const box = e.currentTarget.getBoundingClientRect();
-    if (e.clientX - box.left < box.width * 0.3) prev();
-    else next();
-  };
-  const onCancel = () => {
-    drag.current = null;
-    shift(null);
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(e.clientY - d.y) * 1.2) go(index + (dx < 0 ? 1 : -1));
   };
 
   return (
@@ -497,12 +387,17 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
       ref={scroller}
       className="cs-scroller"
       style={{ '--steps': steps } as CSSProperties}
-      data-swipe={swipe || undefined}
     >
-      <div ref={sticky} className="cs-pin">
+      {/* Невидимые ступеньки — по одной на сцену; их пересечение с серединой экрана переключает сцену */}
+      <div className="cs-rungs" aria-hidden="true">
+        {Array.from({ length: steps }, (_, i) => (
+          <div key={i} ref={(el) => void (rungs.current[i] = el)} className="cs-rung" style={{ '--i': i } as CSSProperties} />
+        ))}
+      </div>
+      <div className="cs-pin">
         <div className="container-page cs-wrap">
           <div className="cs-card">
-            <div ref={visual} className="cs-visual" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onCancel}>
+            <div className="cs-visual" onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => (drag.current = null)}>
               <Stage key={c.id} c={c} finish={currentFinish} scene={scene} />
 
               <div className="cs-tabs" role="group" aria-label="Выбор полотна">
@@ -523,7 +418,7 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
               {c.badge && <span className="canvas-badge cs-badge">{c.badge}</span>}
               <p className="cs-swipehint" aria-hidden="true">
                 <i />
-                {swipe ? 'Листайте вбок' : 'Листайте вниз'}
+                Листайте вниз
               </p>
             </div>
 

@@ -4,23 +4,32 @@ import ceiling from '../assets/hero/ceiling.jpg';
 import { site } from '../config/site';
 import { plural } from '../lib/plural';
 
-// Первый экран: фото потолка с подсветкой и крупное название Santlada.
-// Подмена фото: файл src/assets/hero/ceiling.jpg (потолок в верхней части кадра, от 1600 px по ширине).
-const lead = 'Создаю и восстанавливаю потолки.';
+// Первый экран: настоящий снимок потолка Исы на всю ширину и крупная фраза поверх него.
+// Подмена фото: файл src/assets/hero/ceiling.jpg (от 1600 px по ширине; лучше потолок со световыми линиями).
 const facts = [
-  `Гарантия ${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', 'года', 'лет'])}`,
-  `Опыт ${site.experience}, работал в городах России`,
+  {
+    title: `Гарантия ${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', 'года', 'лет'])}`,
+    note: 'на выполненную работу',
+  },
+  {
+    title: `Опыт ${site.experience}`,
+    note: 'работал в городах России',
+  },
+  {
+    title: 'Дизайн под ваш интерьер',
+    note: 'по вашему примеру или составлю сам',
+  },
 ];
 ---
 
 <section class="hero">
   <Image
     src={ceiling}
-    alt=""
-    widths={[640, 1024, 1600, 2000]}
+    alt="Натяжной потолок со световыми линиями и подвесной люстрой"
+    widths={[640, 1024, 1600]}
     sizes="100vw"
     format="webp"
-    quality={82}
+    quality={88}
     loading="eager"
     fetchpriority="high"
     class="hero-photo"
@@ -29,17 +38,26 @@ const facts = [
 
   <div class="container-page hero-body">
     <h1 class="hero-title">
-      <span class="sr-only">Натяжные потолки </span>
-      <span class="hero-brand">Santlada</span>
+      <span class="sr-only">Santlada, натяжные потолки. </span>
+      <span class="hero-line">Потолок, который</span>
+      <span class="hero-line">хочется рассматривать</span>
     </h1>
-    <p class="hero-lead">{lead}</p>
-    <ul class="hero-facts">
-      {facts.map((f) => <li>{f}</li>)}
-    </ul>
+    <p class="hero-lead">Создаю и восстанавливаю потолки: от ровного белого полотна до световых линий.</p>
 
     <div class="hero-actions">
       <a href="#raboty" class="btn-primary btn-shine hero-more">Смотреть работы</a>
       <a href="#ceny" data-magnet class="btn-ghost hero-cta">Выбрать полотно</a>
     </div>
+
+    <ul class="hero-facts">
+      {
+        facts.map((f) => (
+          <li>
+            <strong>{f.title}</strong>
+            <span>{f.note}</span>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
