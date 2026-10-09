@@ -160,7 +160,7 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
   const corniceLen = Math.min(X1 - X0 - 16, room.corniceM * pxPerM);
   const ledOnly = room.ledM > 0 && room.corniceM === 0;
 
-  const fill = room.colored ? '#e0e4f7' : room.canvas === 'fabric' ? '#f8f6f2' : '#f8f8ff';
+  const fill = room.colored ? '#dfe8f8' : room.canvas === 'fabric' ? '#f8f6f2' : '#f8faff';
   const t = room.type;
 
   const label = [
@@ -183,8 +183,8 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
           <feGaussianBlur stdDeviation="2.2" />
         </filter>
         <radialGradient id={`spot-${uid}`}>
-          <stop offset="0" stopColor="#aab0ff" stopOpacity="0.85" />
-          <stop offset="1" stopColor="#aab0ff" stopOpacity="0" />
+          <stop offset="0" stopColor="#9bbcff" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#9bbcff" stopOpacity="0" />
         </radialGradient>
         <linearGradient id={`gloss-${uid}`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0.35" stopColor="#fff" stopOpacity="0" />
@@ -202,11 +202,11 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
       </defs>
 
       {/* Стены вокруг потолка */}
-      <rect x="0" y="0" width={W} height={H} rx="18" fill="#eef0fc" />
+      <rect x="0" y="0" width={W} height={H} rx="18" fill="#edf3fd" />
 
       {/* Подсветка по периметру (парящий) */}
       {t === 'paryashchiy' && (
-        <polygon points={pts(poly)} fill="none" stroke="#aab0ff" strokeWidth="14" filter={`url(#glow-${uid})`} opacity="0.95" />
+        <polygon points={pts(poly)} fill="none" stroke="#9bbcff" strokeWidth="14" filter={`url(#glow-${uid})`} opacity="0.95" />
       )}
 
       {/* Полотно */}
@@ -215,14 +215,14 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
       <polygon points={pts(poly)} fill={`url(#gloss-${uid})`} />
 
       {/* Примыкание к стенам */}
-      {t === 'tenevoy' && <polygon points={pts(poly)} fill="none" stroke="#16173a" strokeWidth="7" strokeLinejoin="miter" />}
-      {t === 'paryashchiy' && <polygon points={pts(poly)} fill="none" stroke="#3b3ba8" strokeWidth="2.5" />}
-      {(t === 'klassika' || t === 'linii') && <polygon points={pts(poly)} fill="none" stroke="#c8cdea" strokeWidth="3" />}
+      {t === 'tenevoy' && <polygon points={pts(poly)} fill="none" stroke="#0e1a3a" strokeWidth="7" strokeLinejoin="miter" />}
+      {t === 'paryashchiy' && <polygon points={pts(poly)} fill="none" stroke="#1d4ed8" strokeWidth="2.5" />}
+      {(t === 'klassika' || t === 'linii') && <polygon points={pts(poly)} fill="none" stroke="#c3d3ec" strokeWidth="3" />}
 
       <g clipPath={`url(#clip-${uid})`}>
         {/* Скрытый карниз / подсветка в нише у окна */}
         {corniceLen > 0 && (
-          <rect x={X0 + 8} y={Y0 + 2} width={corniceLen} height="12" rx="3" fill={room.ledM > 0 ? '#d3d7fb' : '#d9dcef'} />
+          <rect x={X0 + 8} y={Y0 + 2} width={corniceLen} height="12" rx="3" fill={room.ledM > 0 ? '#d0e0fb' : '#d8e2f2'} />
         )}
         {(room.ledM > 0 && corniceLen > 0) || ledOnly ? (
           <rect
@@ -231,7 +231,7 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
             width={corniceLen > 0 ? corniceLen : X1 - X0 - 16}
             height="4"
             rx="2"
-            fill="#aab0ff"
+            fill="#9bbcff"
             filter={`url(#soft-${uid})`}
           />
         ) : null}
@@ -239,13 +239,13 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
         {/* Световые линии */}
         {lines.rect && (
           <g>
-            <g stroke="#aab0ff" strokeWidth="8" fill="none" filter={`url(#soft-${uid})`} opacity="0.9">
+            <g stroke="#9bbcff" strokeWidth="8" fill="none" filter={`url(#soft-${uid})`} opacity="0.9">
               <rect x={lines.rect.x} y={lines.rect.y} width={lines.rect.w} height={lines.rect.h} />
               {lines.diagonals.map(([a, b], i) => (
                 <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} />
               ))}
             </g>
-            <g stroke="#3b3ba8" strokeWidth="2.5" fill="none" strokeLinecap="square">
+            <g stroke="#1d4ed8" strokeWidth="2.5" fill="none" strokeLinecap="square">
               <rect x={lines.rect.x} y={lines.rect.y} width={lines.rect.w} height={lines.rect.h} />
               {lines.diagonals.map(([a, b], i) => (
                 <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} />
@@ -256,23 +256,23 @@ export default function CeilingPreview({ room, className = '' }: { room: Room; c
 
         {/* Обход труб */}
         {Array.from({ length: Math.min(room.pipes, 6) }, (_, i) => (
-          <circle key={i} cx={X0 + 14 + i * 14} cy={Y1 - 14} r="4.5" fill="#fff" stroke="#555880" strokeWidth="2" />
+          <circle key={i} cx={X0 + 14 + i * 14} cy={Y1 - 14} r="4.5" fill="#fff" stroke="#4e5f80" strokeWidth="2" />
         ))}
 
         {/* Точечные светильники */}
         {spots.map(([x, y], i) => (
           <g key={i}>
             <circle cx={x} cy={y} r="11" fill={`url(#spot-${uid})`} />
-            <circle cx={x} cy={y} r="4.2" fill="#ffffff" stroke="#9a9dc0" strokeWidth="1.5" />
+            <circle cx={x} cy={y} r="4.2" fill="#ffffff" stroke="#94a3c4" strokeWidth="1.5" />
           </g>
         ))}
 
         {/* Люстры */}
         {chandeliers.map(([x, y], i) => (
-          <g key={i} stroke="#555880" fill="none">
+          <g key={i} stroke="#4e5f80" fill="none">
             <circle cx={x} cy={y} r="22" fill={`url(#spot-${uid})`} stroke="none" />
             <circle cx={x} cy={y} r="13" strokeWidth="2" />
-            <circle cx={x} cy={y} r="3.5" fill="#555880" stroke="none" />
+            <circle cx={x} cy={y} r="3.5" fill="#4e5f80" stroke="none" />
             {[0, 60, 120, 180, 240, 300].map((a) => (
               <line
                 key={a}

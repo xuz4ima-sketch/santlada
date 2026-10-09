@@ -33,6 +33,9 @@ const words = lead.split(' ');
         {words.map((w, i) => <><span class="hero-word" style={`--i:${i}`}>{w}</span>{' '}</>)}
       </span>
     </h1>
-    <a href="#calc" data-calc data-magnet class="btn-primary btn-shine hero-cta">Рассчитать стоимость</a>
+    <div class="hero-actions">
+      <a href="#calc" data-calc data-magnet class="btn-primary btn-shine hero-cta">Рассчитать стоимость</a>
+      <a href="#raboty" class="btn-ghost hero-more">Смотреть работы</a>
+    </div>
   </div>
 </section>
