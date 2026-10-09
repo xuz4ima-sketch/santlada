@@ -727,6 +727,8 @@
   min-height: 0;
   height: min(100%, 46rem);
   overflow: hidden;
+  /* Safari на iPhone мерцает, когда скруглённый блок с overflow: hidden обрезает 3D-слои: отдельная плоскость это лечит */
+  isolation: isolate;
   border-radius: var(--radius-media);
   background: var(--color-plane);
   box-shadow: var(--shadow-float);
@@ -744,6 +746,7 @@
   position: relative;
   min-height: 10.5rem;
   overflow: hidden;
+  isolation: isolate;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -1950,6 +1953,29 @@
 
   .cs-info {
     gap: 0.5rem;
+  }
+}
+
+/*
+ * Пока страница прокручивается, бесконечные анимации (покачивание кусочка, блик полотна, пламя, блик на кнопке)
+ * стоят: телефону нужно двигать карточку и одновременно перерисовывать их, и картинка мелко дрожит.
+ * html[data-scrolling] ставит CanvasStory.tsx и снимает через 0,15 с после остановки прокрутки.
+ */
+html[data-scrolling] .cs-scroller *,
+html[data-scrolling] .cs-scroller *::before,
+html[data-scrolling] .cs-scroller *::after,
+html[data-scrolling] .btn-shine::after {
+  animation-play-state: paused !important;
+}
+
+/*
+ * На сенсорных экранах зернистость матового и «штукатурки» кладём обычным наложением, без multiply:
+ * режим смешивания внутри 3D-кусочка заставляет iPhone пересобирать слой при каждом движении.
+ */
+@media (hover: none) {
+  [data-finish='matte'] > .cs-sheen,
+  [data-finish='plaster'] > .cs-sheen {
+    mix-blend-mode: normal;
   }
 }
 

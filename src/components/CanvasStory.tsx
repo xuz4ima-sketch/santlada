@@ -340,6 +340,24 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
     return () => io.disconnect();
   }, [steps]);
 
+  // Пока страница прокручивается, держим на <html> метку data-scrolling — CSS на это время замораживает
+  // бесконечные анимации (иначе на iPhone картинка мелко дрожит). Слушатель только переключает метку.
+  useEffect(() => {
+    const root = document.documentElement;
+    let timer = 0;
+    const onScroll = () => {
+      if (!root.hasAttribute('data-scrolling')) root.setAttribute('data-scrolling', '');
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => root.removeAttribute('data-scrolling'), 150);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.clearTimeout(timer);
+      root.removeAttribute('data-scrolling');
+    };
+  }, []);
+
   // Пока история на экране, нижняя панель телефона заказывает показанное полотно
   const inView = useRef(false);
   const shownName = useRef(c.name);
