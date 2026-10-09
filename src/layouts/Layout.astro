@@ -49,7 +49,7 @@ const jsonLd = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#fafcff" />
+    <meta name="theme-color" content={page === 'home' ? '#071333' : '#fafcff'} />
     <meta name="format-detection" content="telephone=no" />
 
     <script is:inline>
