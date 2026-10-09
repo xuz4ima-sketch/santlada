@@ -1,46 +1,25 @@
 ---
-import { getImage } from 'astro:assets';
-import CanvasCatalog, { type CatalogItem } from './CanvasCatalog';
+import CanvasStory from './CanvasStory';
 import { canvases } from '../config/canvases';
 
-// Фото карточек — src/assets/canvases/<photo>; цены и тексты — src/config/canvases.ts
-const photos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/canvases/*.{jpg,jpeg,png,webp}', { eager: true });
-const photoFor = (file: string) => Object.entries(photos).find(([p]) => p.endsWith(`/${file}`))?.[1].default;
-
-const items: CatalogItem[] = await Promise.all(
-  canvases.map(async (c) => {
-    const src = photoFor(c.photo);
-    const img = src && (await getImage({ src, widths: [480, 720, 1080].filter((w) => w <= src.width), format: 'webp', quality: 76 }));
-    return {
-      id: c.id,
-      name: c.name,
-      nameRu: c.nameRu,
-      origin: c.origin,
-      price: c.price,
-      badge: c.badge,
-      description: c.description,
-      points: c.points,
-      photo: src && img ? { src: img.src, srcset: img.srcSet.attribute, width: src.width, height: src.height } : undefined,
-    };
-  }),
-);
+// Цены, тексты и сцены — src/config/canvases.ts; анимации — global.css, раздел «Полотна: история при прокрутке»
 ---
 
 <section id="ceny" class="page scroll-mt-20" data-tone="tint" data-fx="curtain-up" data-reveal aria-labelledby="ceny-title">
-  <div class="container-page py-16 lg:py-24">
+  <div class="container-page pt-16 lg:pt-24">
     <div class="max-w-2xl" data-rise>
       <h2 id="ceny-title" class="h-section">Полотна и цены</h2>
       <p class="lead mt-3">
-        Я работаю с тремя полотнами — от надёжного на каждый день до немецкого премиума. Листайте каталог, выбирайте
-        полотно и заказывайте. Цена — за 1 м² полотна.
+        Я работаю с тремя полотнами — от надёжного на каждый день до немецкого премиума. Прокручивайте вниз — покажу
+        каждое вблизи: толщину, ширину рулона и чем оно лучше. Цена — за 1 м² полотна.
       </p>
     </div>
+  </div>
 
-    <div class="mt-10" data-rise>
-      <CanvasCatalog client:load items={items} />
-    </div>
+  <CanvasStory client:load items={canvases} />
 
-    <p class="mt-4 max-w-3xl text-[0.9375rem] leading-relaxed text-ink-soft" data-rise>
+  <div class="container-page pb-16 lg:pb-24">
+    <p class="max-w-3xl text-[0.9375rem] leading-relaxed text-ink-soft">
       Профиль, подсветка, световые линии, светильники и карниз считаются отдельно — они зависят от проекта. Итоговую сумму
       называю после бесплатного замера, до начала работ.
     </p>

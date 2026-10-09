@@ -4,12 +4,12 @@ import ceiling from '../assets/hero/ceiling.jpg';
 import { site } from '../config/site';
 import { plural } from '../lib/plural';
 
-// Первый экран: фото потолка с подсветкой и крупный заголовок «Натяжные потолки Santlada».
+// Первый экран: фото потолка с подсветкой и крупное название Santlada.
 // Подмена фото: файл src/assets/hero/ceiling.jpg (потолок в верхней части кадра, от 1600 px по ширине).
-const lead = 'Делаю потолки в Хасавюрте и по всему Дагестану: световые линии, парящие и теневые.';
+const lead = 'Создаю и восстанавливаю потолки.';
 const facts = [
   `Гарантия ${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', 'года', 'лет'])}`,
-  `Опыт ${site.experience}`,
+  `Опыт ${site.experience}, работал в городах России`,
 ];
 ---
 
@@ -29,7 +29,7 @@ const facts = [
 
   <div class="container-page hero-body">
     <h1 class="hero-title">
-      <span class="hero-kicker">Натяжные потолки</span>
+      <span class="sr-only">Натяжные потолки </span>
       <span class="hero-brand">Santlada</span>
     </h1>
     <p class="hero-lead">{lead}</p>
