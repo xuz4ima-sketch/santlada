@@ -619,12 +619,11 @@
   top: 0.875rem;
   left: 0.875rem;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.92);
+  background: rgb(255 255 255 / 0.95);
   padding: 0.3rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-brand-deep);
-  backdrop-filter: blur(6px);
 }
 
 /*
@@ -632,7 +631,9 @@
  * Блок выше экрана: карточка «прилипает» под шапкой, а прокрутка переключает сцены (data-scene у .cs-stage).
  * Кусочек полотна — 3D-пластина (.cs-swatch): лицевая сторона и четыре торца. В каждой сцене у неё своё положение,
  * между положениями она поворачивается плавно; слои сцены (линейка, рулон, веер…) появляются по очереди.
- * Действие сцены доигрывается само после переключения: --p-width, --p-palette… (0…1) выставляет CanvasStory.tsx.
+ * Действие сцены — CSS-переходы, которые запускаются сменой data-scene и доигрывают до конца сами.
+ * Двигаем только transform и opacity: их рисует видеокарта, и на телефоне анимация не дрожит.
+ * --dur — сколько длится действие сцены, --act — его задержка (пока кусочек полотна встаёт на место).
  * --sw — цвет полотна, --sz — размер кусочка, --cy — где по высоте центр сцены.
  */
 .cs-scroller {
@@ -683,6 +684,8 @@
   user-select: none;
   -webkit-user-select: none;
   background: radial-gradient(115% 90% at 50% 38%, #f6f9fe 0%, #e2e9f5 52%, #c9d5ea 100%);
+  /* Рисунки сцен подстраиваются под высоту картинки (единицы cqh), а не только под ширину экрана */
+  container-type: size;
 }
 
 .cs-tabs {
@@ -744,9 +747,14 @@
 
 /* ── Сцена ── */
 .cs-stage {
-  --sz: clamp(8rem, min(44vw, 27svh), 14.5rem);
+  /* Свободная полоса картинки — между вкладками сверху (3rem) и меткой снизу (2.75rem) */
+  --free: calc(100cqh - 5.75rem);
+  --sz: clamp(6.5rem, min(44vw, var(--free)), 14.5rem);
   --ease: cubic-bezier(0.65, 0, 0.2, 1);
-  --cy: 56%;
+  --act-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur: 1.3s;
+  --act: 0.5s;
+  --cy: calc(3rem + var(--free) / 2);
   --noise-fine: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeDiffuseLighting lighting-color='white' surfaceScale='0.9'%3E%3CfeDistantLight azimuth='225' elevation='55'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --noise-plaster: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeDiffuseLighting lighting-color='white' surfaceScale='2.2'%3E%3CfeDistantLight azimuth='225' elevation='48'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   position: absolute;
@@ -757,8 +765,7 @@
 
 @media (min-width: 48rem) {
   .cs-stage {
-    --sz: clamp(10rem, min(24vw, 34svh), 15rem);
-    --cy: 54%;
+    --sz: clamp(10rem, min(24vw, var(--free)), 15rem);
   }
 }
 
@@ -909,8 +916,8 @@
 }
 
 .cs-stage[data-scene='opacity'] .cs-glow {
-  opacity: calc(var(--p-opacity, 1) * 0.18);
-  transition: opacity 0.12s linear;
+  opacity: 0.18;
+  transition: opacity var(--dur) ease var(--act);
 }
 
 /* Торцы пластины — толщина --th, уходят «назад» от лицевой стороны */
@@ -965,7 +972,6 @@
   margin: calc(var(--sz) * 0.36) 0 0 calc(var(--sz) * -0.65);
   border-radius: 50%;
   background: radial-gradient(closest-side, rgb(14 26 58 / 0.3), transparent);
-  filter: blur(5px);
   opacity: 0;
   transition: opacity 0.6s ease;
 }
@@ -976,29 +982,36 @@
 }
 
 /* ── Толщина: линейка, увеличенный срез и штангенциркуль ── */
+/* Рисунок неподвижен, губка — отдельный слой (.cs-jaw), который съезжает вниз; --open — её начальный подъём */
 .cs-cal {
   position: absolute;
   left: 50%;
   top: var(--cy);
-  width: min(92%, 29rem);
-  overflow: visible;
+  width: min(92%, 29rem, var(--free) * 1.75);
   opacity: 0;
-  transform: translate(-50%, -62%);
+  transform: translate(-50%, -54%);
   transition: opacity 0.4s ease;
   pointer-events: none;
+
+  & svg {
+    display: block;
+    width: 100%;
+    overflow: visible;
+  }
+
+  & .cs-guides,
+  & .cs-jaw {
+    position: absolute;
+    inset: 0;
+  }
 }
 
 .cs-stage[data-scene='thickness'] .cs-cal {
   opacity: 1;
-  transition-delay: 0.35s;
+  transition-delay: 0.3s;
 }
 
 .cs-band {
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: scale(1, 0.12);
-  transition: transform 0.8s var(--ease);
-
   & rect {
     fill: var(--sw);
     stroke: color-mix(in oklab, var(--sw) 62%, #46526c);
@@ -1012,28 +1025,13 @@
   }
 }
 
-.cs-stage[data-scene='thickness'] .cs-band {
-  transform: scale(1, 1);
-  transition-delay: 0.4s;
-}
-
 .cs-zoom {
   font: 500 10px var(--font-sans);
   fill: var(--color-ink-soft);
   text-anchor: middle;
 }
 
-.cs-ruler,
-.cs-caliper {
-  opacity: 0;
-  transition:
-    opacity 0.5s ease,
-    transform 0.7s var(--ease);
-}
-
 .cs-ruler {
-  transform: translateX(-14px);
-
   & rect {
     fill: #fff;
     stroke: var(--color-line);
@@ -1050,16 +1048,6 @@
   }
 }
 
-.cs-caliper {
-  transform: translateX(16px);
-}
-
-.cs-stage[data-scene='thickness'] :is(.cs-ruler, .cs-caliper) {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.45s;
-}
-
 .cs-metal {
   fill: #d3d9e2;
   stroke: #8692a6;
@@ -1068,6 +1056,16 @@
 
 .cs-cal-tick {
   stroke: #5b6678;
+}
+
+.cs-jaw {
+  transform: translateY(var(--open));
+  transition: transform 0.4s var(--act-ease);
+}
+
+.cs-stage[data-scene='thickness'] .cs-jaw {
+  transform: none;
+  transition: transform var(--dur) var(--act-ease) var(--act);
 }
 
 .cs-readout {
@@ -1082,38 +1080,51 @@
   }
 }
 
-.cs-guides line {
-  stroke: var(--color-brand);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 3;
-}
-
 .cs-guides {
-  transition: opacity 0.4s ease;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  & line {
+    stroke: var(--color-brand);
+    stroke-width: 1.2;
+    stroke-dasharray: 3 3;
+  }
 }
 
-/* ── Ширина: рулон катится по плану комнаты (положение рулона считает CanvasStory.tsx) ── */
+.cs-stage[data-scene='thickness'] .cs-guides {
+  opacity: 1;
+  transition-delay: calc(var(--act) + var(--dur));
+}
+
+/* ── Ширина: рулон катится по плану комнаты ── */
+/*
+ * Комната нарисована неподвижным SVG, поверх — слои: полотно (.cs-roll-film) растёт вниз через scaleY,
+ * рулон (.cs-roller) едет вниз на --travel и худеет до --thin, полосы на нём бегут — будто вращается.
+ * Полотно и рулон идут с одной кривой и одной длительностью, поэтому край полотна всегда под рулоном.
+ */
 .cs-roll {
   position: absolute;
   left: 50%;
   top: var(--cy);
-  width: min(94%, 28rem);
-  overflow: visible;
+  width: min(94%, 28rem, var(--free) * 1.8);
+  aspect-ratio: 420 / 250;
   opacity: 0;
-  transform: translate(-50%, -55%) perspective(900px) rotateX(24deg);
-  transition: opacity 0.4s ease;
+  transform: translate(-50%, -50%) perspective(900px) rotateX(24deg);
+  transition: opacity 0.35s ease;
   pointer-events: none;
+
+  & > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
 }
 
 .cs-stage[data-scene='width'] .cs-roll {
   opacity: 1;
-  transition-delay: 0.2s;
-}
-
-.cs-room {
-  fill: none;
-  stroke: var(--color-ink);
-  stroke-width: 4;
+  transition-delay: 0.15s;
 }
 
 .cs-floor {
@@ -1126,41 +1137,95 @@
   stroke-width: 1;
 }
 
-.cs-roll-shadow {
-  fill: rgb(14 26 58 / 0.22);
-  filter: blur(3px);
-}
-
-.cs-roll-body {
-  stroke: #7d8aa2;
-  stroke-width: 0.8;
-}
-
-.cs-roll-stripe {
-  stroke: #5b6678;
-  stroke-width: 0.8;
-}
-
-.cs-roll-end {
-  fill: color-mix(in oklab, var(--sw) 88%, #8b97ad);
-  stroke: #7d8aa2;
-  stroke-width: 0.8;
-}
-
-.cs-roll-ring {
+.cs-room {
   fill: none;
-  stroke: rgb(70 82 108 / 0.28);
-  stroke-width: 0.6;
+  stroke: var(--color-ink);
+  stroke-width: 4;
 }
 
-.cs-roll-core {
-  fill: #c9a77a;
-  stroke: #8e6f48;
-  stroke-width: 0.6;
+.cs-roll-film {
+  position: absolute;
+  background: linear-gradient(160deg, #fff, var(--sw));
+  transform-origin: top;
+  transform: scaleY(0);
+  transition: transform 0.4s var(--act-ease);
 }
 
-.cs-roll-hole {
-  fill: #5d4a35;
+.cs-roller {
+  position: absolute;
+  transform-origin: center;
+  transform: translateY(0) scaleY(1);
+  transition: transform 0.4s var(--act-ease);
+}
+
+.cs-stage[data-scene='width'] {
+  & .cs-roll-film {
+    transform: scaleY(1);
+    transition: transform var(--dur) var(--act-ease) var(--act);
+  }
+
+  & .cs-roller {
+    transform: translateY(var(--travel)) scaleY(var(--thin));
+    transition: transform var(--dur) var(--act-ease) var(--act);
+  }
+
+  & .cs-roller-end {
+    transform: translateX(50%) scaleX(var(--thin));
+    transition: transform var(--dur) var(--act-ease) var(--act);
+  }
+
+  & .cs-roller-body b {
+    transform: translateY(-50%);
+    transition: transform var(--dur) var(--act-ease) var(--act);
+  }
+}
+
+/* Тень рулона на полу и на уже раскатанном полотне */
+.cs-roller-shade {
+  position: absolute;
+  inset: -45% -1% -55%;
+  background:
+    radial-gradient(50% 30% at 50% 82%, rgb(14 26 58 / 0.28), transparent),
+    linear-gradient(to bottom, transparent, rgb(14 26 58 / 0.12) 30%, transparent 50%);
+}
+
+/* Тело рулона: объём даёт градиент, левый торец скруглён */
+.cs-roller-body {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 6px 0 0 6px / 50% 0 0 50%;
+  background: linear-gradient(to bottom, #8b97ad, var(--sw) 22%, #fff 42%, var(--sw) 75%, #7d8aa2);
+  box-shadow: inset 0 0 0 1px rgb(125 138 162 / 0.6);
+
+  /* Полосы — витки плёнки; бегут вверх, пока рулон катится вниз */
+  & b {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 300%;
+    background: repeating-linear-gradient(to bottom, transparent 0 calc(100% / 6 - 1px), rgb(70 82 108 / 0.35) calc(100% / 6 - 1px) calc(100% / 6));
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
+    transition: transform 0.4s var(--act-ease);
+  }
+}
+
+/* Правый торец: витки плёнки и картонная втулка */
+.cs-roller-end {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  aspect-ratio: 0.36;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, #5d4a35 0 12%, #c9a77a 13% 24%, #8e6f48 25% 26%, transparent 27%),
+    repeating-radial-gradient(closest-side, color-mix(in oklab, var(--sw) 88%, #8b97ad) 0 8%, rgb(70 82 108 / 0.35) 8% 9.5%);
+  box-shadow: inset 0 0 0 1px #7d8aa2;
+  transform: translateX(50%) scaleX(1);
+  transition: transform 0.4s var(--act-ease);
 }
 
 .cs-dim {
@@ -1187,16 +1252,28 @@
   }
 }
 
-.cs-noseam {
-  font: 600 15px var(--font-sans);
-  fill: var(--color-ink-soft);
-  text-anchor: middle;
-}
-
 .cs-stage[data-scene='width'] .cs-dim {
   opacity: 1;
   transform: none;
-  transition-delay: 0.3s;
+  transition-delay: 0.25s;
+}
+
+.cs-noseam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  translate: 0 -50%;
+  text-align: center;
+  font-size: clamp(0.8125rem, 3.4vw, 0.9375rem);
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cs-stage[data-scene='width'] .cs-noseam {
+  opacity: 1;
+  transition: opacity 0.5s ease calc(var(--act) + var(--dur) - 0.2s);
 }
 
 /* ── Веер образцов цвета ── */
@@ -1219,10 +1296,10 @@
       inset 0 0 0 1px rgb(255 255 255 / 0.35);
     opacity: 0;
     transform-origin: 50% 140%;
-    transform: rotate(0deg) translateY(24px);
+    transform: rotate(0deg) translateY(16px);
     transition:
-      transform 0.6s var(--ease),
-      opacity 0.4s ease;
+      transform 0.4s var(--ease),
+      opacity 0.3s ease;
 
     &::before {
       content: '';
@@ -1233,13 +1310,13 @@
   }
 }
 
-/* Веер раскрывается: сначала стопка образцов, потом расходится */
+/* Веер раскрывается: сначала появляется стопка образцов, потом расходится */
 .cs-stage[data-scene='palette'] .cs-fan i {
   opacity: 1;
-  transform: rotate(calc(var(--r) * var(--p-palette, 1))) translateY(calc((1 - var(--p-palette, 1)) * 12px));
+  transform: rotate(var(--r)) translateY(0);
   transition:
-    transform 0.12s linear,
-    opacity 0.3s ease;
+    opacity 0.3s ease 0.2s,
+    transform var(--dur) var(--act-ease) calc(var(--act) + var(--i) * 0.04s);
 }
 
 /* ── Непрозрачность: лампа за двумя кусочками ── */
@@ -1285,15 +1362,14 @@
   right: -10%;
   top: 72%;
   height: 3px;
-  background: rgb(60 50 40 / 0.4);
-  filter: blur(1.5px);
+  background: linear-gradient(to bottom, transparent, rgb(60 50 40 / 0.4), transparent);
   transform: rotate(-9deg);
 }
 
 /* Лампа разгорается */
 .cs-stage[data-scene='opacity'] :is(.cs-op-lamp, .cs-op-wire) {
-  opacity: var(--p-opacity, 1);
-  transition: opacity 0.12s linear;
+  opacity: 1;
+  transition: opacity var(--dur) ease var(--act);
 }
 
 .cs-op-label {
@@ -1331,14 +1407,20 @@
   letter-spacing: 0.08em;
   color: rgb(29 78 216 / 0.6);
   background: linear-gradient(to bottom, rgb(14 26 58 / 0.04), rgb(14 26 58 / 0.09));
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 1.2s var(--ease);
 }
 
-/* Надпись «печатается» по краю */
-.cs-stage[data-scene='marking'] .cs-mark {
-  clip-path: inset(0 calc((1 - var(--p-marking, 1)) * 100%) 0 0);
-  transition: clip-path 0.12s linear;
+/* Надпись «печатается» по краю: её закрывает полоска цвета полотна, которая уезжает вправо */
+.cs-mark-cover {
+  position: absolute;
+  inset: 0;
+  background: var(--sw);
+  transform-origin: right;
+  transition: transform 0.4s var(--act-ease);
+}
+
+.cs-stage[data-scene='marking'] .cs-mark-cover {
+  transform: scaleX(0);
+  transition: transform var(--dur) var(--act-ease) var(--act);
 }
 
 .cs-loupe {
@@ -1369,8 +1451,8 @@
 }
 
 .cs-stage[data-scene='marking'] .cs-loupe {
-  transform: scale(clamp(0, (var(--p-marking, 1) - 0.55) * 2.3, 1));
-  transition: transform 0.12s linear;
+  transform: scale(1);
+  transition-delay: calc(var(--act) + var(--dur) - 0.3s);
 }
 
 /* ── Огонь под полотном ── */
@@ -1389,7 +1471,8 @@
 
 /* Пламя разгорается, полотно над ним не плавится */
 .cs-stage[data-scene='fire'] .cs-flame {
-  scale: calc(0.25 + var(--p-fire, 1) * 0.75);
+  scale: 1;
+  transition: scale var(--dur) var(--act-ease) var(--act);
 }
 
 .cs-flame {
@@ -1400,7 +1483,7 @@
   height: calc(var(--sz) * 0.42);
   transform-origin: 50% 100%;
   scale: 0.25;
-  transition: scale 0.12s linear;
+  transition: scale 0.4s var(--act-ease);
   animation: cs-flicker 0.9s ease-in-out infinite;
 
   & i {
@@ -1412,7 +1495,6 @@
     border-radius: 50% 0 50% 50%;
     transform: translateX(-50%) rotate(-45deg);
     background: radial-gradient(circle at 60% 40%, #ffb347, #ff6a1f 70%);
-    filter: blur(1px);
   }
 
   & i:nth-child(2) {
@@ -1553,34 +1635,47 @@
       border-radius: 4px;
       background: var(--color-brand);
       transform-origin: left;
-      transform: scaleX(var(--f, 0));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    &[data-done]::after {
+      transform: scaleX(1);
+    }
+
+    &[aria-current]::after {
+      transform: scaleX(1);
+      transition: transform calc(var(--act, 0.5s) + var(--dur, 1.3s)) linear;
     }
   }
 }
 
+/* Тексты всех сцен лежат в одной клетке друг на друге: высота карточки — по самой длинной сцене и не прыгает */
+.cs-scenes {
+  display: grid;
+}
+
 .cs-scene {
+  grid-area: 1 / 1;
   display: grid;
   align-content: start;
   gap: 0.3rem;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0s linear 0.2s;
 
-  & > * {
-    animation: cs-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
-
-  & > :nth-child(2) {
-    animation-delay: 0.06s;
-  }
-
-  & > :nth-child(3) {
-    animation-delay: 0.14s;
-  }
-
-  & > :nth-child(4) {
-    animation-delay: 0.22s;
-  }
-
-  & > :nth-child(5) {
-    animation-delay: 0.3s;
+  &[data-current] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.45s ease 0.1s,
+      transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s,
+      visibility 0s;
   }
 }
 
@@ -1588,7 +1683,6 @@
   from {
     opacity: 0;
     transform: translateY(14px);
-    filter: blur(4px);
   }
 }
 
@@ -1672,12 +1766,11 @@
   align-items: center;
   gap: 0.5rem;
   border-radius: 999px;
-  background: rgb(14 26 58 / 0.78);
+  background: rgb(14 26 58 / 0.85);
   padding: 0.375rem 0.875rem 0.375rem 0.625rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #fff;
-  backdrop-filter: blur(6px);
   transition:
     opacity 0.4s ease,
     transform 0.4s ease;
@@ -1686,6 +1779,12 @@
   [data-started] & {
     opacity: 0;
     transform: translateY(6px);
+
+    /* Спрятанная подсказка не должна крутить анимацию впустую */
+    & i::before,
+    & i::after {
+      animation-play-state: paused;
+    }
   }
 
   & i {
@@ -1745,11 +1844,27 @@
   }
 }
 
-/* Низкий экран телефона: убираем второстепенные строки, чтобы картинке осталось место */
-@media (max-width: 47.99rem) and (max-height: 46rem) {
-  .cs-origin,
+/*
+ * Телефон: номер сцены уже видно по полоскам, пояснение к фактуре — лишняя строка, а кнопку заказа
+ * показывает нижняя панель (MobileBar.tsx: «Заказать BAUF»). Всё освободившееся место отдаём картинке.
+ * Панель есть до 64rem — до этой же ширины прячем кнопки в карточке.
+ */
+@media (max-width: 47.99rem) {
   .cs-kicker,
   .cs-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99rem) {
+  .cs-actions {
+    display: none;
+  }
+}
+
+/* Низкий экран телефона: убираем второстепенные строки, чтобы картинке осталось место */
+@media (max-width: 47.99rem) and (max-height: 46rem) {
+  .cs-origin {
     display: none;
   }
 
