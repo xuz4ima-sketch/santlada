@@ -1,0 +1,126 @@
+---
+import Logo from './Logo.astro';
+import CartButton from './calc/CartButton';
+import { IconMenu, IconPhone, IconWhatsApp } from './icons';
+import { site } from '../config/site';
+import { waLink } from '../lib/whatsapp';
+
+interface Props {
+  page: 'home' | 'works' | 'other';
+}
+const { page } = Astro.props;
+const home = page === 'home' ? '' : '/';
+
+const nav = [
+  { href: `${home}#vidy`, label: 'Виды' },
+  { href: page === 'home' ? '#raboty' : '/raboty/', label: 'Примеры', current: page === 'works' },
+  { href: `${home}#calc`, label: 'Расчёт' },
+  { href: `${home}#kak`, label: 'Как заказать' },
+  { href: `${home}#voprosy`, label: 'Вопросы' },
+  { href: `${home}#kontakty`, label: 'Контакты', mobileOnly: true },
+];
+const wa = waLink('Здравствуйте! Пишу с сайта по поводу натяжного потолка.');
+---
+
+<header
+  class="site-header sticky top-0 z-40 border-b border-line/70 bg-ceiling/90 backdrop-blur-md"
+  data-over={page === 'home' ? '' : undefined}
+>
+  <div class="container-page flex h-16 items-center gap-3 lg:h-[4.5rem]">
+    <Logo />
+
+    <nav class="ml-6 hidden shrink-0 lg:block xl:ml-8" aria-label="Основное меню">
+      <ul class="flex items-center gap-1">
+        {
+          nav.filter((item) => !item.mobileOnly).map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={item.current ? 'page' : undefined}
+                class="rounded-lg px-3 py-2 text-[0.9375rem] whitespace-nowrap text-ink-soft transition-colors hover:bg-haze hover:text-ink aria-[current=page]:font-semibold aria-[current=page]:text-ink"
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2">
+      <a
+        href={`tel:+${site.phoneDigits}`}
+        class="hidden items-center gap-2 rounded-lg px-3 py-2 font-semibold whitespace-nowrap hover:bg-haze xl:inline-flex"
+      >
+        <IconPhone size={18} />
+        {site.phone}
+      </a>
+      <a href={wa} target="_blank" rel="noopener" class="btn-wa hidden min-h-10 px-4 md:inline-flex lg:hidden xl:inline-flex">
+        <IconWhatsApp size={18} />
+        WhatsApp
+      </a>
+      <CartButton client:load />
+      <button
+        type="button"
+        class="hdr-btn inline-flex size-11 items-center justify-center rounded-lg ring-1 ring-line ring-inset hover:bg-haze lg:hidden"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        aria-label="Открыть меню"
+        data-menu-toggle
+      >
+        <IconMenu size={22} />
+      </button>
+    </div>
+  </div>
+
+  <nav id="mobile-nav" class="border-t border-line bg-plane lg:hidden" aria-label="Меню" hidden>
+    <ul class="container-page grid gap-1 py-3">
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} class="block rounded-lg px-3 py-3 text-[1.0625rem] font-medium hover:bg-haze" data-menu-link>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+      <li class="mt-2 flex flex-wrap gap-2 px-3 pb-2">
+        <a href={`tel:+${site.phoneDigits}`} class="btn-ghost flex-1">
+          <IconPhone size={18} />
+          {site.phone}
+        </a>
+        <a href={wa} target="_blank" rel="noopener" class="btn-wa flex-1">
+          <IconWhatsApp size={18} />
+          WhatsApp
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  // На главной шапка лежит на фото, после небольшой прокрутки становится плотной
+  const overHero = document.querySelector<HTMLElement>('.site-header[data-over]');
+  if (overHero) {
+    const sync = () => overHero.toggleAttribute('data-scrolled', window.scrollY > 8);
+    sync();
+    window.addEventListener('scroll', sync, { passive: true });
+  }
+
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.getElementById('mobile-nav');
+  const setOpen = (open: boolean) => {
+    if (!toggle || !menu) return;
+    menu.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+  };
+  toggle?.addEventListener('click', () => setOpen(menu?.hidden ?? false));
+  menu?.querySelectorAll('[data-menu-link]').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu && !menu.hidden) {
+      setOpen(false);
+      toggle?.focus();
+    }
+  });
+</script>

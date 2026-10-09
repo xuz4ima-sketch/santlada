@@ -1,0 +1,190 @@
+---
+import { Image } from 'astro:assets';
+import { ceilingOrder, ceilingTypes, type CeilingType } from '../config/site';
+import { formatRub, fromPricePerM2 } from '../lib/pricing';
+import { getWorks } from '../lib/works';
+import { cardPhotos } from '../data/works';
+import { IconChevronLeft, IconChevronRight } from './icons';
+
+const photos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/works/*/*.{jpg,jpeg,png,webp}', { eager: true });
+const photoFor = (type: CeilingType) => {
+  const exact = Object.entries(photos).find(([p]) => p.includes(`/${type}/${cardPhotos[type]}.`));
+  return (exact ?? Object.entries(photos).find(([p]) => p.includes(`/${type}/`)))?.[1].default;
+};
+
+const works = await getWorks();
+const countFor = (type: CeilingType) => works.filter((w) => w.types.includes(type)).length;
+const pad = (n: number) => String(n).padStart(2, '0');
+const total = ceilingOrder.length;
+---
+
+<section id="vidy" class="page page-full" data-tone="deep" data-fx="curtain-up" data-reveal aria-labelledby="vidy-title">
+  <div class="container-page vidy-inner" data-vidy style={`--n:${total}`}>
+    <div class="vidy-head" data-rise>
+      <div>
+        <h2 id="vidy-title" class="h-section">Виды потолков</h2>
+        <p class="lead mt-3">Цены — за квадратный метр вместе с монтажом. Точную сумму Иса назовёт после бесплатного замера.</p>
+      </div>
+      <div class="vidy-controls">
+        <p class="vidy-count" aria-live="polite"><b data-vidy-count>01</b>/ {pad(total)}</p>
+        <button type="button" class="vidy-arrow" data-vidy-prev aria-label="Предыдущий вид" disabled>
+          <IconChevronLeft size={22} />
+        </button>
+        <button type="button" class="vidy-arrow" data-vidy-next aria-label="Следующий вид">
+          <IconChevronRight size={22} />
+        </button>
+      </div>
+    </div>
+
+    <div class="vidy-slides" role="group" aria-roledescription="carousel" aria-label="Виды потолков" data-rise="zoom">
+      {
+        ceilingOrder.map((type, i) => {
+          const photo = photoFor(type);
+          const info = ceilingTypes[type];
+          return (
+            <article
+              class="vidy-slide"
+              data-vidy-slide
+              data-state={i === 0 ? 'active' : 'after'}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} из ${total}: ${info.name}`}
+            >
+              <div class="vidy-media">
+                {photo && (
+                  <Image
+                    src={photo}
+                    alt={info.name}
+                    widths={[640, 960, 1280]}
+                    sizes="(min-width: 1024px) 700px, (min-width: 640px) 90vw, 100vw"
+                    format="webp"
+                    quality={76}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    draggable="false"
+                    class="vidy-img"
+                  />
+                )}
+              </div>
+              <div class="vidy-info">
+                <p class="vidy-eyebrow" style="--i:0">
+                  {pad(i + 1)} · {info.short}
+                </p>
+                <h3 class="vidy-title" style="--i:1">{info.name}</h3>
+                <p class="vidy-price" style="--i:2">
+                  от <b>{formatRub(fromPricePerM2(type))}</b> за м²
+                </p>
+                <p class="vidy-desc" style="--i:3">{info.description}</p>
+                <ul class="vidy-points" style="--i:4">
+                  {info.points.map((p) => (
+                    <li class="flex gap-2.5">
+                      <span class="mt-[0.7em] h-px w-3 shrink-0 bg-glow" aria-hidden="true" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <div class="vidy-actions" style="--i:5">
+                  <a href="/#calc" data-calc={type} class="btn-primary">
+                    Рассчитать
+                  </a>
+                  <a href={`/raboty/?vid=${type}`} class="btn-ghost">
+                    Примеры: {countFor(type)}
+                  </a>
+                </div>
+              </div>
+            </article>
+          );
+        })
+      }
+    </div>
+
+    <nav class="vidy-tabs" aria-label="Выбор вида потолка" data-rise>
+      <div class="vidy-tabs-grid">
+        {
+          ceilingOrder.map((type, i) => (
+            <button type="button" class="vidy-tab" data-vidy-tab={i} aria-current={i === 0 ? 'true' : 'false'}>
+              <span class="vidy-tab-num">{pad(i + 1)}</span>
+              <span class="vidy-tab-name">{ceilingTypes[type].name}</span>
+            </button>
+          ))
+        }
+        <span class="vidy-bar" aria-hidden="true"></span>
+      </div>
+    </nav>
+  </div>
+</section>
+
+<script>
+  // Листание «Видов потолков»: стрелки, вкладки, клавиши, свайп, горизонтальная прокрутка трекпадом.
+  // Состояние слайдов (before / active / after) задаётся здесь, всю анимацию делает CSS.
+  const root = document.querySelector<HTMLElement>('[data-vidy]');
+  if (root) {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-vidy-slide]'));
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-vidy-tab]'));
+    const prev = root.querySelector<HTMLButtonElement>('[data-vidy-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-vidy-next]');
+    const counter = root.querySelector<HTMLElement>('[data-vidy-count]');
+    const stage = root.querySelector<HTMLElement>('.vidy-slides');
+    let current = 0;
+
+    const show = (to: number) => {
+      current = Math.max(0, Math.min(slides.length - 1, to));
+      slides.forEach((slide, i) => {
+        slide.dataset.state = i < current ? 'before' : i > current ? 'after' : 'active';
+        slide.toggleAttribute('inert', i !== current);
+      });
+      tabs.forEach((tab, i) => tab.setAttribute('aria-current', String(i === current)));
+      root.style.setProperty('--cur', String(current));
+      if (counter) counter.textContent = String(current + 1).padStart(2, '0');
+      if (prev) prev.disabled = current === 0;
+      if (next) next.disabled = current === slides.length - 1;
+    };
+    show(0);
+
+    prev?.addEventListener('click', () => show(current - 1));
+    next?.addEventListener('click', () => show(current + 1));
+    tabs.forEach((tab, i) => tab.addEventListener('click', () => show(i)));
+
+    root.addEventListener('keydown', (event) => {
+      const target = event.target as HTMLElement;
+      if (target.closest('input, textarea, select')) return;
+      if (event.key === 'ArrowLeft') show(current - 1);
+      if (event.key === 'ArrowRight') show(current + 1);
+    });
+
+    if (stage) {
+      // Свайп пальцем или мышью. Вертикальная прокрутка страницы остаётся как есть (touch-action: pan-y).
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+      stage.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        startX = event.clientX;
+        startY = event.clientY;
+        tracking = true;
+      });
+      stage.addEventListener('pointerup', (event) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) show(current + (dx < 0 ? 1 : -1));
+      });
+      stage.addEventListener('pointercancel', () => (tracking = false));
+
+      // Два пальца по трекпаду в сторону
+      let locked = false;
+      stage.addEventListener(
+        'wheel',
+        (event) => {
+          if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 24) return;
+          event.preventDefault();
+          if (locked) return;
+          locked = true;
+          show(current + (event.deltaX > 0 ? 1 : -1));
+          setTimeout(() => (locked = false), 750);
+        },
+        { passive: false },
+      );
+    }
+  }
+</script>

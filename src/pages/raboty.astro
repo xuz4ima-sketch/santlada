@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/Layout.astro';
+import WorksGallery from '../components/works/WorksGallery';
+import { IconTelegram } from '../components/icons';
+import { site } from '../config/site';
+import { plural } from '../lib/plural';
+import { getObjects, getWorks } from '../lib/works';
+
+const works = await getWorks();
+const objects = await getObjects();
+---
+
+<Layout
+  title="Примеры натяжных потолков — Дагестан | SANTLADA"
+  description="Примеры натяжных потолков: световые линии, парящие, теневые и классические. Выберите понравившийся вид и рассчитайте стоимость с монтажом."
+  page="works"
+>
+  <section class="container-page pt-10 pb-8 lg:pt-14">
+    <nav aria-label="Навигация" class="text-[0.875rem] text-ink-soft">
+      <a href="/" class="hover:text-ink">Главная</a>
+      <span aria-hidden="true"> / </span>
+      <span aria-current="page">Примеры</span>
+    </nav>
+    <h1 class="h-display mt-4 text-[2rem] sm:text-[2.75rem] lg:text-[3.25rem]">Примеры потолков</h1>
+    <p class="lead mt-4">
+      {works.length} {plural(works.length, ['пример', 'примера', 'примеров'])} по видам потолков. Откройте пример и нажмите
+      «Хочу такой потолок» — вид потолка и пример сразу попадут в расчёт.
+    </p>
+  </section>
+
+  <section class="container-page pb-8" aria-label="Примеры потолков">
+    <WorksGallery client:load works={works} syncUrl />
+    <p class="mt-4 text-[0.875rem] text-ink-soft">Фото примеров — из открытых фотобанков.</p>
+  </section>
+
+  {
+    objects.length > 0 && (
+      <section class="container-page pt-8 pb-8" aria-labelledby="objects-title">
+        <h2 id="objects-title" class="h-section">С объектов Исы</h2>
+        <p class="lead mt-3">Фото с реальных объектов из Telegram-канала Исы.</p>
+        <div class="mt-6">
+          <WorksGallery client:load works={objects} syncUrl filters={false} layout="grid" />
+        </div>
+      </section>
+    )
+  }
+
+  <section class="container-page pb-16 lg:pb-24">
+    <div class="flex flex-col gap-4 rounded-[var(--radius-card)] bg-haze p-6 sm:flex-row sm:items-center sm:justify-between">
+      <p class="max-w-xl">
+        Выбрали? Соберите потолок для своей комнаты — цена посчитается сразу, а заказ уйдёт Исе в WhatsApp.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <a href="/#calc" class="btn-primary">Рассчитать стоимость</a>
+        <a href={site.telegram} target="_blank" rel="noopener" class="btn-ghost">
+          <IconTelegram size={18} class="text-brand" />
+          Telegram-канал
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

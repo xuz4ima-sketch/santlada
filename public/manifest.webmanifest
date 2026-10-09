@@ -1,0 +1,12 @@
+{
+  "name": "SANTLADA — натяжные потолки",
+  "short_name": "SANTLADA",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#fbfbff",
+  "theme_color": "#fbfbff",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

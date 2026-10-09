@@ -1,0 +1,181 @@
+---
+import '@fontsource-variable/jost';
+import '@fontsource-variable/onest';
+import '../styles/global.css';
+import jostCyrillic from '@fontsource-variable/jost/files/jost-cyrillic-wght-normal.woff2?url';
+import onestCyrillic from '@fontsource-variable/onest/files/onest-cyrillic-wght-normal.woff2?url';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CartDrawer from '../components/calc/CartDrawer';
+import MobileBar from '../components/MobileBar';
+import { site } from '../config/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Без шапки-меню якорей (для страниц, где нет блоков главной) */
+  page?: 'home' | 'works' | 'other';
+}
+
+const { title, description, page = 'home' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href;
+const ogImage = new URL('/og.jpg', Astro.site ?? site.url).href;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'HomeAndConstructionBusiness',
+  name: `${site.brand} — натяжные потолки`,
+  alternateName: site.brandRu,
+  description,
+  url: site.url,
+  image: ogImage,
+  telephone: site.phone,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: site.baseCity,
+    addressRegion: 'Республика Дагестан',
+    addressCountry: 'RU',
+  },
+  areaServed: { '@type': 'State', name: 'Республика Дагестан' },
+  sameAs: [site.telegram, site.instagram].filter(Boolean),
+};
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#fbfbff" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <link rel="preload" href={jostCyrillic} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={onestCyrillic} as="font" type="font/woff2" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:site_name" content={site.brand} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    {
+      site.yandexMetrikaId && (
+        <script is:inline define:vars={{ id: site.yandexMetrikaId }}>
+          (function (m, e, t, r, i, k, a) {
+            m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
+            m[i].l = 1 * new Date();
+            k = e.createElement(t); a = e.getElementsByTagName(t)[0];
+            k.async = 1; k.src = r; a.parentNode.insertBefore(k, a);
+          })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+          ym(Number(id), 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true });
+        </script>
+      )
+    }
+  </head>
+  <body class="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+    <a
+      href="#main"
+      class="sr-only z-[60] rounded-md bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+    >
+      Перейти к содержанию
+    </a>
+    <Header page={page} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <CartDrawer client:load />
+    <MobileBar client:load />
+
+    <script>
+      import { setDraftType, scrollToCalc, resetDraft, $cartOpen } from '../stores/order';
+      import type { CeilingType } from '../config/site';
+
+      // Смена «страниц»: блок получает data-reveal="in", когда его верхняя кромка поднялась над нижним краем экрана.
+      // Блоки выше показанного считаются пройденными (быстрый переход по якорю, возврат на середину страницы).
+      const pages = Array.from(document.querySelectorAll<HTMLElement>('.page[data-reveal]'));
+      const show = (upTo: number) => pages.slice(0, upTo + 1).forEach((p) => (p.dataset.reveal = 'in'));
+
+      // Элементы с data-rise выплывают по одному, когда сами попали в экран (и только после смены цвета их блока).
+      // Задержка --i растёт по порядку среди соседей: карточки, шаги, вопросы появляются «лесенкой».
+      const rises = Array.from(document.querySelectorAll<HTMLElement>('.page [data-rise]'));
+      const order = new Map<Element, number>();
+      for (const el of rises) {
+        const parent = el.parentElement as Element;
+        const i = order.get(parent) ?? 0;
+        order.set(parent, i + 1);
+        if (!el.style.getPropertyValue('--i')) el.style.setProperty('--i', String(Math.min(i, 7)));
+      }
+
+      if ('IntersectionObserver' in window) {
+        const seen = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting && entry.boundingClientRect.top >= 0) continue;
+              show(pages.indexOf(entry.target as HTMLElement));
+              seen.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -15% 0px' },
+        );
+        pages.forEach((p) => seen.observe(p));
+
+        const risen = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting && entry.boundingClientRect.top >= 0) continue;
+              (entry.target as HTMLElement).dataset.in = '';
+              risen.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px' },
+        );
+        rises.forEach((el) => risen.observe(el));
+      } else {
+        show(pages.length - 1);
+        rises.forEach((el) => (el.dataset.in = ''));
+      }
+
+      // Кнопки «Рассчитать» в статичных блоках: data-calc="linii" или data-calc (без вида)
+      document.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement | null;
+        const calc = target?.closest<HTMLElement>('[data-calc]');
+        if (calc) {
+          const type = calc.dataset.calc as CeilingType | '';
+          if (type) setDraftType(type);
+          if (calc.dataset.calcNew !== undefined) resetDraft();
+          if (document.getElementById('calc')) {
+            event.preventDefault();
+            scrollToCalc();
+          }
+          return;
+        }
+        const cart = target?.closest<HTMLElement>('[data-open-cart]');
+        if (cart) {
+          event.preventDefault();
+          $cartOpen.set(true);
+        }
+      });
+    </script>
+  </body>
+</html>

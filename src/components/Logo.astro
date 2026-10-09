@@ -1,0 +1,21 @@
+---
+import { site } from '../config/site';
+
+interface Props {
+  class?: string;
+  subtitle?: boolean;
+}
+const { class: className = '', subtitle = true } = Astro.props;
+---
+
+<a href="/" class:list={['group inline-flex items-center gap-2.5 rounded-lg', className]} aria-label={`${site.brand} — на главную`}>
+  <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true" class="shrink-0">
+    <rect width="32" height="32" rx="8" fill="#16173a"></rect>
+    <rect x="4.5" y="4.5" width="23" height="23" rx="4.5" fill="#fbfbff"></rect>
+    <path d="M10 22 22 10" stroke="#3b3ba8" stroke-width="3" stroke-linecap="round"></path>
+  </svg>
+  <span class="flex flex-col leading-none">
+    <span class="font-display text-[1.0625rem] font-medium tracking-[0.14em]">{site.brand}</span>
+    {subtitle && <span class="mt-1 text-[0.75rem] text-ink-soft">натяжные потолки</span>}
+  </span>
+</a>

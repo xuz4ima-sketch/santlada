@@ -1,0 +1,38 @@
+---
+import { faq } from '../config/site';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<section id="voprosy" class="page scroll-mt-20" data-tone="tint" data-fx="curtain-down" data-reveal aria-labelledby="voprosy-title">
+  <div class="container-page py-16 lg:py-24">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <div data-rise="left">
+        <h2 id="voprosy-title" class="h-section">Частые вопросы</h2>
+        <p class="lead mt-3">Не нашли ответ — напишите Исе в WhatsApp, он ответит.</p>
+      </div>
+      <div class="divide-y divide-line border-y border-line">
+        {
+          faq.map((item) => (
+            <details class="group" data-rise>
+              <summary class="flex min-h-14 list-none items-center justify-between gap-4 py-4 text-[1.0625rem] font-semibold [&::-webkit-details-marker]:hidden">
+                {item.q}
+                <span class="grid size-8 shrink-0 place-items-center rounded-full bg-haze text-brand-deep transition-transform duration-200 group-open:rotate-45" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </span>
+              </summary>
+              <p class="max-w-2xl pb-5 text-[0.9375rem] leading-relaxed text-ink-soft">{item.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </div>
+</section>

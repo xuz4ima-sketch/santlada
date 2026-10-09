@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://santlada.ru/sitemap-index.xml

@@ -1,0 +1,28 @@
+---
+import RoomBuilder, { type Example } from './calc/RoomBuilder';
+import { ceilingOrder, type CeilingType } from '../config/site';
+import { fromPricePerM2 } from '../lib/pricing';
+import { getWorks } from '../lib/works';
+
+const works = await getWorks();
+const examples: Example[] = ceilingOrder.flatMap((type) =>
+  works
+    .filter((w) => w.types[0] === type)
+    .slice(0, 6)
+    .map((w) => ({ id: w.id, type, src: w.thumb.src, srcset: w.thumb.srcset, caption: w.caption, video: w.kind === 'video' })),
+);
+const fromPrices = Object.fromEntries(ceilingOrder.map((t) => [t, fromPricePerM2(t)])) as Record<CeilingType, number>;
+---
+
+<section id="calc" class="page scroll-mt-16 lg:scroll-mt-20" data-tone="tint" data-fx="slant" data-reveal aria-labelledby="calc-title">
+  <div class="container-page py-16 lg:py-24">
+    <h2 id="calc-title" class="h-section" data-rise>Рассчитайте стоимость</h2>
+    <p class="lead mt-3" data-rise>
+      Соберите потолок для каждой комнаты и добавьте в заказ. Цена пересчитывается сразу, а точную сумму Иса назовёт после
+      бесплатного замера.
+    </p>
+    <div class="mt-10" data-rise="zoom">
+      <RoomBuilder client:visible={{ rootMargin: '400px' }} examples={examples} fromPrices={fromPrices} />
+    </div>
+  </div>
+</section>

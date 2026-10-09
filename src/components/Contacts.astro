@@ -1,0 +1,50 @@
+---
+import QuickMeasure from './QuickMeasure';
+import { IconPhone, IconTelegram, IconWhatsApp } from './icons';
+import { site } from '../config/site';
+import { waLink } from '../lib/whatsapp';
+---
+
+<section id="kontakty" class="page scroll-mt-20" data-tone="deep" data-fx="iris-low" data-reveal aria-labelledby="kontakty-title">
+  <div class="container-page grid py-16 lg:py-24 grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
+    <div data-rise="left">
+      <h2 id="kontakty-title" class="h-section">Запишитесь на бесплатный замер</h2>
+      <p class="lead mt-3">
+        Не хотите считать сами — оставьте заявку. Иса напишет в WhatsApp, договорится о времени и всё рассчитает на месте.
+      </p>
+      <ul class="mt-8 grid gap-3">
+        <li>
+          <a href={`tel:+${site.phoneDigits}`} class="group inline-flex items-center gap-3">
+            <span class="grid size-11 place-items-center rounded-full bg-plane text-brand ring-1 ring-mist"><IconPhone size={20} /></span>
+            <span>
+              <span class="block text-[0.875rem] text-ink-soft">Позвонить</span>
+              <span class="font-semibold group-hover:underline">{site.phone}</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href={waLink()} target="_blank" rel="noopener" class="group inline-flex items-center gap-3">
+            <span class="grid size-11 place-items-center rounded-full bg-plane text-wa ring-1 ring-mist"><IconWhatsApp size={20} /></span>
+            <span>
+              <span class="block text-[0.875rem] text-ink-soft">Написать</span>
+              <span class="font-semibold group-hover:underline">WhatsApp</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href={site.telegram} target="_blank" rel="noopener" class="group inline-flex items-center gap-3">
+            <span class="grid size-11 place-items-center rounded-full bg-plane text-brand ring-1 ring-mist"><IconTelegram size={20} /></span>
+            <span>
+              <span class="block text-[0.875rem] text-ink-soft">Смотреть работы</span>
+              <span class="font-semibold group-hover:underline">Telegram-канал</span>
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-light rounded-[var(--radius-card)] bg-plane p-5 ring-1 ring-mist sm:p-7" data-rise="right">
+      <QuickMeasure client:visible />
+    </div>
+  </div>
+</section>

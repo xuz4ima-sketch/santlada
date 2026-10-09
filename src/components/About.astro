@@ -1,0 +1,106 @@
+---
+import { Image } from 'astro:assets';
+import { IconPin, IconTelegram } from './icons';
+import { site } from '../config/site';
+import { plural } from '../lib/plural';
+
+const photos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/objects/*/*.{jpg,jpeg,png,webp}', { eager: true });
+const pick = (file: string) => Object.entries(photos).find(([p]) => p.endsWith(`/${file}.jpg`))?.[1].default;
+const collage = [pick('226'), pick('54'), pick('55')].filter(Boolean) as ImageMetadata[];
+const years = `${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', 'года', 'лет'])}`;
+---
+
+<section id="master" class="page scroll-mt-20" data-tone="white" data-fx="from-right" data-reveal aria-labelledby="master-title">
+  <div class="container-page grid py-16 lg:py-24 grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-2 lg:gap-16">
+    <div data-rise="left">
+      <h2 id="master-title" class="h-section">Мастер {site.master}</h2>
+      <div class="mt-5 grid max-w-xl gap-4 text-[1.0625rem] leading-relaxed">
+        <p>
+          Иса занимается натяжными потолками {site.experience}. Замеряет, помогает выбрать полотно и свет, монтирует
+          профиль, подсветку и светильники.
+        </p>
+        <p class="text-ink-soft">
+          База — {site.baseCityIn}. На замер и монтаж Иса выезжает по всей республике: в города, районы и сёла. Готовые
+          работы он выкладывает в Telegram-канал — там видно, как выглядят потолки вживую.
+        </p>
+      </div>
+
+      <dl class="mt-8 grid max-w-xl grid-cols-2 gap-4">
+        <div class="rounded-[var(--radius-card)] bg-haze p-4">
+          <dt class="text-[0.875rem] text-ink-soft">Опыт</dt>
+          <dd class="mt-1 font-semibold">{site.experience}</dd>
+        </div>
+        <div class="rounded-[var(--radius-card)] bg-haze p-4">
+          <dt class="text-[0.875rem] text-ink-soft">Гарантия на монтаж</dt>
+          <dd class="mt-1 font-semibold">{years}</dd>
+        </div>
+      </dl>
+
+      <a href={site.telegram} target="_blank" rel="noopener" class="btn-ghost mt-8">
+        <IconTelegram size={18} class="text-brand" />
+        Открыть Telegram-канал
+      </a>
+    </div>
+
+    <div class="grid content-start gap-8" data-rise="right">
+      {
+        collage.length === 3 && (
+          <div class="grid grid-cols-[1.25fr_1fr] gap-3">
+            <Image
+              src={collage[0]}
+              alt="Световые линии — работа Исы"
+              widths={[360, 540]}
+              sizes="(min-width: 1024px) 300px, 55vw"
+              format="webp"
+              quality={72}
+              class="row-span-2 h-full w-full rounded-[var(--radius-card)] object-cover"
+            />
+            <Image
+              src={collage[1]}
+              alt="Парящий потолок в ванной"
+              widths={[240, 360]}
+              sizes="(min-width: 1024px) 240px, 40vw"
+              format="webp"
+              quality={72}
+              class="aspect-[4/3] w-full rounded-[var(--radius-card)] object-cover"
+            />
+            <Image
+              src={collage[2]}
+              alt="Теневой потолок в ванной"
+              widths={[240, 360]}
+              sizes="(min-width: 1024px) 240px, 40vw"
+              format="webp"
+              quality={72}
+              class="aspect-[4/3] w-full rounded-[var(--radius-card)] object-cover"
+            />
+          </div>
+        )
+      }
+
+      <div id="geo" aria-labelledby="geo-title">
+        <h3 id="geo-title" class="text-[1.25rem] font-semibold">Где работает</h3>
+        <p class="mt-2 text-ink-soft">Замер бесплатный в любом городе и селе Дагестана.</p>
+        <ul class="mt-4 flex flex-wrap gap-2">
+          {
+            site.cities.map((city) => (
+              <li
+                data-rise="zoom"
+                class:list=[
+                  'inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-[0.9375rem]',
+                  city === site.baseCity ? 'bg-ink font-semibold text-white' : 'bg-plane ring-1 ring-line ring-inset',
+                ]}
+              >
+                {city === site.baseCity && <IconPin size={16} />}
+                {city}
+                {city === site.baseCity && <span class="sr-only"> — база</span>}
+              </li>
+            ))
+          }
+          <li data-rise="zoom" class="inline-flex min-h-10 items-center rounded-full border border-dashed border-mist px-4 text-[0.9375rem] text-ink-soft">
+            и сёла республики
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

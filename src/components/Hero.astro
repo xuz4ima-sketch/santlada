@@ -1,0 +1,28 @@
+---
+import { Image } from 'astro:assets';
+import ceiling from '../assets/hero/ceiling.jpg';
+import { site } from '../config/site';
+---
+
+<section class="hero">
+  <Image
+    src={ceiling}
+    alt=""
+    widths={[640, 1024, 1600]}
+    sizes="100vw"
+    format="webp"
+    quality={82}
+    loading="eager"
+    fetchpriority="high"
+    class="hero-photo"
+  />
+
+  <div class="container-page hero-body">
+    <h1>
+      <span class="hero-brand">{site.brand}</span>
+      <span class="sr-only"> — </span>
+      <span class="hero-lead">Натяжные потолки в&nbsp;Хасавюрте и&nbsp;по&nbsp;всему&nbsp;Дагестану</span>
+    </h1>
+    <a href="#calc" data-calc class="btn-primary hero-cta">Рассчитать стоимость</a>
+  </div>
+</section>
