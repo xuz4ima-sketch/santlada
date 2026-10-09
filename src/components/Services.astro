@@ -71,7 +71,7 @@ const total = ceilingOrder.length;
                 </p>
                 <h3 class="vidy-title" style="--i:1">{info.name}</h3>
                 <p class="vidy-price" style="--i:2">
-                  от <b>{formatRub(fromPricePerM2(type))}</b> за м²
+                  от <b data-count={fromPricePerM2(type)} data-suffix=" ₽">{formatRub(fromPricePerM2(type))}</b> за м²
                 </p>
                 <p class="vidy-desc" style="--i:3">{info.description}</p>
                 <ul class="vidy-points" style="--i:4">
@@ -83,7 +83,7 @@ const total = ceilingOrder.length;
                   ))}
                 </ul>
                 <div class="vidy-actions" style="--i:5">
-                  <a href="/#calc" data-calc={type} class="btn-primary">
+                  <a href="/#calc" data-calc={type} data-magnet class="btn-primary">
                     Рассчитать
                   </a>
                   <a href={`/raboty/?vid=${type}`} class="btn-ghost">
@@ -116,6 +116,8 @@ const total = ceilingOrder.length;
 <script>
   // Листание «Видов потолков»: стрелки, вкладки, клавиши, свайп, горизонтальная прокрутка трекпадом.
   // Состояние слайдов (before / active / after) задаётся здесь, всю анимацию делает CSS.
+  import { countUp, primeCount } from '../lib/fx';
+
   const root = document.querySelector<HTMLElement>('[data-vidy]');
   if (root) {
     const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-vidy-slide]'));
@@ -126,8 +128,13 @@ const total = ceilingOrder.length;
     const stage = root.querySelector<HTMLElement>('.vidy-slides');
     let current = 0;
 
+    // Цена «набегает» к значению, когда слайд становится виден (текст слайда выплывает с задержкой — считаем вместе с ним)
+    const countCurrent = () => countUp(slides[current].querySelector<HTMLElement>('[data-count]'), { delay: 450 });
+
     const show = (to: number) => {
+      const before = current;
       current = Math.max(0, Math.min(slides.length - 1, to));
+      if (current !== before) countCurrent();
       slides.forEach((slide, i) => {
         slide.dataset.state = i < current ? 'before' : i > current ? 'after' : 'active';
         slide.toggleAttribute('inert', i !== current);
@@ -139,6 +146,20 @@ const total = ceilingOrder.length;
       if (next) next.disabled = current === slides.length - 1;
     };
     show(0);
+
+    // Первый слайд — когда блок впервые показался на экране
+    if ('IntersectionObserver' in window) {
+      primeCount(slides[0].querySelector<HTMLElement>('[data-count]'));
+      const first = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          first.disconnect();
+          countCurrent();
+        },
+        { threshold: 0.35 },
+      );
+      first.observe(root);
+    }
 
     prev?.addEventListener('click', () => show(current - 1));
     next?.addEventListener('click', () => show(current + 1));

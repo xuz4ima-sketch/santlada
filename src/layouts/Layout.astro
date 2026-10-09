@@ -110,6 +110,10 @@ const jsonLd = {
     <script>
       import { setDraftType, scrollToCalc, resetDraft, $cartOpen } from '../stores/order';
       import type { CeilingType } from '../config/site';
+      import { initPointerFx } from '../lib/fx';
+
+      // Эффекты для мыши: магнит у кнопок, свечение карточек, наклон фото
+      initPointerFx();
 
       // Смена «страниц»: блок получает data-reveal="in", когда его верхняя кромка поднялась над нижним краем экрана.
       // Блоки выше показанного считаются пройденными (быстрый переход по якорю, возврат на середину страницы).

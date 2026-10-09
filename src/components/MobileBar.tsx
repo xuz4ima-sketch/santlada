@@ -1,9 +1,10 @@
 import { useStore } from '@nanostores/react';
 import { site } from '../config/site';
-import { calcRoom, formatRub, newRoom } from '../lib/pricing';
+import { calcRoom, newRoom } from '../lib/pricing';
 import { useClientStore } from '../lib/useMounted';
 import { waLink } from '../lib/whatsapp';
 import { $calcInView, $cartOpen, $draft, $isEditing, $notice, $order, commitDraft, scrollToCalc } from '../stores/order';
+import AnimatedRub from './calc/AnimatedRub';
 import { IconBag, IconPhone, IconWhatsApp } from './icons';
 
 const emptyOrder = { items: [], subtotal: 0, minApplied: false, total: 0 } as ReturnType<typeof $order.get>;
@@ -40,7 +41,7 @@ export default function MobileBar() {
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1 pl-1">
               <p className="truncate text-[0.8125rem] text-ink-soft">{draft.name || 'Комната'}, примерно</p>
-              <p className="font-display text-[1.125rem] font-semibold tabular-nums">{formatRub(calcRoom(draft).total)}</p>
+              <p className="font-display text-[1.125rem] font-semibold tabular-nums"><AnimatedRub value={calcRoom(draft).total} /></p>
             </div>
             <button type="button" className="btn-primary px-4" onClick={() => commitDraft()}>
               {editing ? 'Сохранить' : 'Добавить в заказ'}
@@ -58,10 +59,10 @@ export default function MobileBar() {
               <button type="button" className="btn-ink min-h-12" onClick={() => $cartOpen.set(true)}>
                 <IconBag size={20} />
                 <span className="hidden min-[360px]:inline">Заказ:</span>
-                <span className="whitespace-nowrap tabular-nums">{formatRub(order.total)}</span>
+                <span className="whitespace-nowrap tabular-nums"><AnimatedRub value={order.total} /></span>
               </button>
             ) : (
-              <a href="/#calc" className="btn-primary min-h-12" onClick={(e) => {
+              <a href="/#calc" className="btn-primary btn-shine min-h-12" onClick={(e) => {
                 if (document.getElementById('calc')) {
                   e.preventDefault();
                   scrollToCalc();

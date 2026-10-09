@@ -2,6 +2,12 @@
 import { Image } from 'astro:assets';
 import ceiling from '../assets/hero/ceiling.jpg';
 import { site } from '../config/site';
+
+// Текст собирается из размытия: буквы названия и слова строки выходят по очереди (Blur Text из React Bits).
+// Для скринридера — обычная строка, разбитые на части копии скрыты.
+const lead = 'Натяжные потолки в Хасавюрте и по всему Дагестану';
+const letters = [...site.brand];
+const words = lead.split(' ');
 ---
 
 <section class="hero">
@@ -19,10 +25,14 @@ import { site } from '../config/site';
 
   <div class="container-page hero-body">
     <h1>
-      <span class="hero-brand">{site.brand}</span>
-      <span class="sr-only"> — </span>
-      <span class="hero-lead">Натяжные потолки в&nbsp;Хасавюрте и&nbsp;по&nbsp;всему&nbsp;Дагестану</span>
+      <span class="sr-only">{site.brand} — {lead}</span>
+      <span class="hero-brand" aria-hidden="true">
+        {letters.map((ch, i) => <span class="hero-char" style={`--i:${i}`}>{ch}</span>)}
+      </span>
+      <span class="hero-lead" aria-hidden="true">
+        {words.map((w, i) => <><span class="hero-word" style={`--i:${i}`}>{w}</span>{' '}</>)}
+      </span>
     </h1>
-    <a href="#calc" data-calc class="btn-primary hero-cta">Рассчитать стоимость</a>
+    <a href="#calc" data-calc data-magnet class="btn-primary btn-shine hero-cta">Рассчитать стоимость</a>
   </div>
 </section>

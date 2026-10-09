@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ceilingOrder, ceilingTypes, roomNames, type CeilingType } from '../../config/site';
 import { canvasNames, prices, type Canvas } from '../../config/prices';
 import { AREA_MAX, AREA_MIN, calcRoom, estimatePerimeter, formatNum, formatRub, newRoom, perimeterOf } from '../../lib/pricing';
+import AnimatedRub from './AnimatedRub';
 import { plural } from '../../lib/plural';
 import { useClientStore } from '../../lib/useMounted';
 import {
@@ -127,6 +128,7 @@ export default function RoomBuilder({ examples, fromPrices }: Props) {
                 return (
                   <label
                     key={type}
+                    data-spot
                     className="group relative flex cursor-pointer items-center gap-3 rounded-[var(--radius-card)] bg-plane p-2.5 pr-3.5 ring-1 ring-line ring-inset transition-shadow hover:ring-mist has-[:checked]:ring-2 has-[:checked]:ring-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand"
                   >
                     <input
@@ -512,7 +514,7 @@ function Summary({
       <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-line pt-4">
         <span className="font-semibold">Примерно</span>
         <span className="font-display text-[1.5rem] font-semibold tabular-nums" aria-live="polite">
-          {formatRub(total)}
+          <AnimatedRub value={total} />
         </span>
       </div>
       <p className="mt-1 text-[0.8125rem] leading-snug text-ink-soft">Точную цену Иса назовёт после бесплатного замера.</p>

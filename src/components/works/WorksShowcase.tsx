@@ -294,14 +294,14 @@ export default function WorksShowcase({ works, covers }: Props) {
                   style={{ opacity: Math.min(a, 1.4) * 0.3 }}
                 />
                 {w.kind === 'video' && (
-                  <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-ink/75 px-2.5 py-1 text-[0.75rem] font-semibold text-white">
+                  <span className="absolute top-3 left-3 z-[1] inline-flex items-center gap-1.5 rounded-full bg-ink/75 px-2.5 py-1 text-[0.75rem] font-semibold text-white">
                     <IconPlay size={12} />
                     Видео
                   </span>
                 )}
                 <span
                   aria-hidden="true"
-                  className="absolute right-3 bottom-3 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-ink opacity-0 shadow-[var(--shadow-float)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                  className="absolute right-3 bottom-3 z-[1] rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-ink opacity-0 shadow-[var(--shadow-float)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                   style={{ display: i === index ? undefined : 'none' }}
                 >
                   Рассмотреть
@@ -341,7 +341,7 @@ export default function WorksShowcase({ works, covers }: Props) {
             >
               <IconChevronRight size={22} />
             </button>
-            <button type="button" className="btn-primary min-w-0 flex-1 whitespace-nowrap lg:flex-none" onClick={() => wantLike({ id: work.id, type: work.types[0] })}>
+            <button type="button" data-magnet className="btn-primary min-w-0 flex-1 whitespace-nowrap lg:flex-none" onClick={() => wantLike({ id: work.id, type: work.types[0] })}>
               <IconHeart size={18} />
               Хочу такой потолок
             </button>

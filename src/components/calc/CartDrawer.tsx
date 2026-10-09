@@ -3,6 +3,7 @@ import { useStore } from '@nanostores/react';
 import { measureTimes, site } from '../../config/site';
 import { prices } from '../../config/prices';
 import { formatRub, roomSummary } from '../../lib/pricing';
+import AnimatedRub from './AnimatedRub';
 import { plural } from '../../lib/plural';
 import { useClientStore } from '../../lib/useMounted';
 import { buildOrderMessage, emptyContact, waLink, type Contact } from '../../lib/whatsapp';
@@ -173,7 +174,7 @@ export default function CartDrawer() {
                   <span className="font-semibold">
                     Итого за {rooms.length} {plural(rooms.length)}
                   </span>
-                  <span className="font-display text-[1.375rem] font-semibold tabular-nums">{formatRub(order.total)}</span>
+                  <span className="font-display text-[1.375rem] font-semibold tabular-nums"><AnimatedRub value={order.total} /></span>
                 </div>
                 <p className="mt-1 text-[0.8125rem] leading-snug text-ink-soft">
                   {order.minApplied

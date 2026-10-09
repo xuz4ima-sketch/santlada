@@ -30,14 +30,18 @@ const wa = waLink('Здравствуйте! Пишу с сайта по пов�
     <Logo />
 
     <nav class="ml-6 hidden shrink-0 lg:block xl:ml-8" aria-label="Основное меню">
-      <ul class="flex items-center gap-1">
+      <ul class="relative flex items-center gap-1" data-nav>
+        <span
+          class="pointer-events-none absolute top-0 left-0 h-full w-0 rounded-lg bg-ink/[0.07] opacity-0 transition-none data-[ready]:transition-[transform,width,opacity] data-[ready]:duration-300 data-[ready]:ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+          aria-hidden="true"
+          data-pill></span>
         {
           nav.filter((item) => !item.mobileOnly).map((item) => (
             <li>
               <a
                 href={item.href}
                 aria-current={item.current ? 'page' : undefined}
-                class="rounded-lg px-3 py-2 text-[0.9375rem] whitespace-nowrap text-ink-soft transition-colors hover:bg-haze hover:text-ink aria-[current=page]:font-semibold aria-[current=page]:text-ink"
+                class="relative block rounded-lg px-3 py-2 text-[0.9375rem] whitespace-nowrap text-ink-soft transition-colors hover:text-ink data-[active]:text-ink aria-[current=page]:font-semibold aria-[current=page]:text-ink"
               >
                 {item.label}
               </a>
@@ -105,6 +109,63 @@ const wa = waLink('Здравствуйте! Пишу с сайта по пов�
     const sync = () => overHero.toggleAttribute('data-scrolled', window.scrollY > 8);
     sync();
     window.addEventListener('scroll', sync, { passive: true });
+  }
+
+  // Меню на компьютере: «таблетка» скользит к пункту под курсором и сама следит за прокруткой (Pill Nav из React Bits)
+  const navList = document.querySelector<HTMLElement>('[data-nav]');
+  const pill = navList?.querySelector<HTMLElement>('[data-pill]');
+  if (navList && pill) {
+    const links = Array.from(navList.querySelectorAll<HTMLAnchorElement>('a'));
+    const current = links.find((a) => a.getAttribute('aria-current') === 'page') ?? null;
+    let hovered: HTMLAnchorElement | null = null;
+    let spied: HTMLAnchorElement | null = null;
+    let ready = false;
+
+    const place = () => {
+      const el = hovered ?? current ?? spied;
+      links.forEach((a) => a.toggleAttribute('data-active', a === el));
+      if (!el || !el.offsetWidth) {
+        pill.style.opacity = '0';
+        return;
+      }
+      pill.style.width = `${el.offsetWidth}px`;
+      pill.style.transform = `translateX(${el.offsetLeft}px)`;
+      pill.style.opacity = '1';
+      if (!ready) {
+        // Первый раз ставим «таблетку» на место без скольжения из угла
+        void pill.offsetWidth;
+        pill.setAttribute('data-ready', '');
+        ready = true;
+      }
+    };
+
+    links.forEach((a) => {
+      a.addEventListener('pointerenter', () => ((hovered = a), place()));
+      a.addEventListener('focus', () => ((hovered = a), place()));
+      a.addEventListener('blur', () => ((hovered = null), place()));
+    });
+    navList.addEventListener('pointerleave', () => ((hovered = null), place()));
+
+    // Подсвечиваем пункт того блока, который сейчас на середине экрана (только на главной)
+    const byId = new Map(links.filter((a) => a.pathname === location.pathname && a.hash).map((a) => [a.hash.slice(1), a]));
+    if (byId.size && 'IntersectionObserver' in window) {
+      const spy = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const link = byId.get(entry.target.id) ?? null;
+            if (entry.isIntersecting) spied = link;
+            else if (spied === link) spied = null;
+          }
+          place();
+        },
+        { rootMargin: '-45% 0px -50% 0px' },
+      );
+      document.querySelectorAll('.page[id]').forEach((section) => spy.observe(section));
+    }
+
+    new ResizeObserver(place).observe(navList);
+    document.fonts?.ready.then(place);
+    place();
   }
 
   const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
