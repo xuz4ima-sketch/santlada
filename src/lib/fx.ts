@@ -1,8 +1,8 @@
 /*
  * Мелкие эффекты, подсмотренные в React Bits: магнит у кнопок (Magnet), подсветка карточки за курсором
- * (Spotlight Card), наклон фото (Tilted Card) и «набегающие» числа (Count Up).
+ * (Spotlight Card) и наклон фото (Tilted Card).
  * Мышь-эффекты включаются только на устройствах с мышью; магнит и наклон — ещё и без «уменьшить движение».
- * Разметка просто помечается атрибутами: data-magnet, data-spot, data-tilt, data-count.
+ * Разметка просто помечается атрибутами: data-magnet, data-spot, data-tilt.
  */
 
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,39 +80,4 @@ export function initPointerFx() {
   });
 
   document.documentElement.addEventListener('mouseleave', releaseMagnets);
-}
-
-/**
- * Число «набегает» от ~55% до значения из data-count (суффикс — из data-suffix, например « ₽»).
- * Разметка уже содержит итоговое число, поэтому без скрипта и при «уменьшить движение» ничего не меняется.
- */
-const ruNumber = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
-const counting = new WeakMap<HTMLElement, number>();
-
-const renderCount = (el: HTMLElement, n: number) => {
-  el.textContent = `${ruNumber.format(Math.round(n))}${el.dataset.suffix ?? ''}`;
-};
-
-/** Ставит число в начальное значение заранее — чтобы до начала счёта не мелькал итог */
-export function primeCount(el: HTMLElement | null | undefined) {
-  const to = Number(el?.dataset.count);
-  if (el && Number.isFinite(to) && !reduceMotion()) renderCount(el, to * 0.55);
-}
-
-export function countUp(el: HTMLElement | null | undefined, { ms = 900, delay = 0 } = {}) {
-  if (!el || reduceMotion()) return;
-  const to = Number(el.dataset.count);
-  if (!Number.isFinite(to)) return;
-  const from = to * 0.55;
-  const render = (n: number) => renderCount(el, n);
-
-  cancelAnimationFrame(counting.get(el) ?? 0);
-  render(from);
-  const start = performance.now() + delay;
-  const tick = (now: number) => {
-    const p = Math.min(1, Math.max(0, (now - start) / ms));
-    render(from + (to - from) * (1 - (1 - p) ** 3));
-    if (p < 1) counting.set(el, requestAnimationFrame(tick));
-  };
-  counting.set(el, requestAnimationFrame(tick));
 }

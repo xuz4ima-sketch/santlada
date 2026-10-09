@@ -4,9 +4,10 @@ import { IconPin, IconTelegram } from './icons';
 import { site } from '../config/site';
 import { plural } from '../lib/plural';
 
-const photos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/objects/*/*.{jpg,jpeg,png,webp}', { eager: true });
-const pick = (file: string) => Object.entries(photos).find(([p]) => p.endsWith(`/${file}.jpg`))?.[1].default;
-const collage = [pick('226'), pick('54'), pick('55')].filter(Boolean) as ImageMetadata[];
+// Коллаж — из работ в src/assets/works/: имена файлов ниже
+const photos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/works/*/*.{jpg,jpeg,png,webp}', { eager: true });
+const pick = (file: string) => Object.entries(photos).find(([p]) => /\/([^/]+)\.[a-z]+$/i.exec(p)?.[1] === file)?.[1].default;
+const collage = [pick('536'), pick('530'), pick('55')].filter(Boolean) as ImageMetadata[];
 const years = `${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', 'года', 'лет'])}`;
 ---
 
@@ -49,7 +50,7 @@ const years = `${site.guaranteeYears} ${plural(site.guaranteeYears, ['год', '
             <div class="glare row-span-2 rounded-[var(--radius-card)]" data-tilt>
               <Image
                 src={collage[0]}
-                alt="Световые линии — работа Исы"
+                alt="Световые контуры вокруг люстры — работа Исы"
                 widths={[360, 540]}
                 sizes="(min-width: 1024px) 300px, 55vw"
                 format="webp"

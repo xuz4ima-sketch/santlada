@@ -1,35 +1,27 @@
 ---
-import WorksShowcase from './works/WorksShowcase';
+import WorksGallery from './works/WorksGallery';
 import { IconTelegram } from './icons';
-import { ceilingOrder, site } from '../config/site';
-import { getWorks, pickForHome } from '../lib/works';
+import { site } from '../config/site';
+import { getWorks } from '../lib/works';
 
 const works = await getWorks();
-const home = pickForHome(works, 24);
-const cover = (w?: (typeof works)[number]) => (w ? { src: w.thumb.src, srcset: w.thumb.srcset } : undefined);
-const covers = {
-  all: cover(home[0]),
-  ...Object.fromEntries(ceilingOrder.map((type) => [type, cover(home.find((w) => w.types[0] === type))])),
-};
 ---
 
-<section id="raboty" class="page page-full" data-tone="white" data-fx="iris" data-reveal aria-labelledby="raboty-title">
-  <div class="container-page py-6 lg:py-8">
-    <div class="page-head flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between" data-rise>
-      <div>
-        <h2 id="raboty-title" class="h-section">Работы</h2>
-        <p class="lead mt-3">
-          Листайте примеры, выбирайте вид потолка и нажмите «Хочу такой потолок» — он попадёт в расчёт.
-        </p>
-      </div>
-      <a href="/raboty/" class="btn-ghost shrink-0">Все работы: {works.length}</a>
+<section id="raboty" class="page scroll-mt-20" data-tone="white" data-fx="curtain-down" data-reveal aria-labelledby="raboty-title">
+  <div class="container-page py-16 lg:py-24">
+    <div class="max-w-2xl" data-rise>
+      <h2 id="raboty-title" class="h-section">Работы Исы</h2>
+      <p class="lead mt-3">
+        Настоящие объекты из Telegram-канала: световые линии, парящие, теневые и классические потолки. Понравился какой-то —
+        нажмите «Хочу такой потолок», и Иса получит ссылку на него в WhatsApp.
+      </p>
     </div>
 
-    <div class="mt-5 lg:mt-6" data-rise="zoom">
-      <WorksShowcase client:load works={home} covers={covers} />
+    <div class="mt-8" data-rise="zoom">
+      <WorksGallery client:load works={works} compact syncUrl />
     </div>
 
-    <p class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.9375rem] text-ink-soft" data-rise>
+    <p class="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.9375rem] text-ink-soft" data-rise>
       <IconTelegram size={18} class="text-brand" />
       Новые объекты Иса выкладывает в Telegram-канал
       <a href={site.telegram} target="_blank" rel="noopener" class="font-semibold text-brand-deep underline-offset-4 hover:underline">

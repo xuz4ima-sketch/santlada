@@ -1,0 +1,50 @@
+---
+import { Image } from 'astro:assets';
+import { ceilingTypes } from '../config/site';
+import { getBeforeAfter } from '../lib/works';
+
+// Пары фото — src/assets/before-after/<id>-do.jpg и <id>-posle.jpg, подписи — src/data/works.ts
+const pairs = getBeforeAfter();
+---
+
+{
+  pairs.length > 0 && (
+    <section id="do-posle" class="page scroll-mt-20" data-tone="deep" data-fx="split" data-reveal aria-labelledby="do-posle-title">
+      <div class="container-page py-16 lg:py-24">
+        <div class="max-w-2xl" data-rise>
+          <h2 id="do-posle-title" class="h-section">До и после</h2>
+          <p class="lead mt-3">Одни и те же комнаты: какими Иса их застал и что получилось после монтажа.</p>
+        </div>
+
+        <ul class="mt-10 grid gap-10 lg:gap-8">
+          {pairs.map((pair) => (
+            <li class="grid grid-cols-2 gap-x-2.5 gap-y-4 sm:gap-x-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1.3fr)] lg:items-center lg:gap-6" data-rise>
+              {[
+                { img: pair.before, label: 'До', tag: 'bg-ink/80 text-white', alt: `До: ${pair.title}` },
+                { img: pair.after, label: 'После', tag: 'bg-white text-brand-deep', alt: `После: ${pair.title}` },
+              ].map((side) => (
+                <figure class="relative overflow-hidden rounded-[var(--radius-card)] bg-white/5">
+                  <Image
+                    src={side.img}
+                    alt={side.alt}
+                    widths={[360, 540, 820]}
+                    sizes="(min-width: 1200px) 420px, (min-width: 1024px) 36vw, 46vw"
+                    format="webp"
+                    quality={76}
+                    class="aspect-square w-full object-cover object-top sm:aspect-[4/3]"
+                  />
+                  <figcaption class:list={['ba-tag', side.tag]}>{side.label}</figcaption>
+                </figure>
+              ))}
+              <div class="max-lg:col-span-2">
+                <p class="text-[0.8125rem] font-medium tracking-wide text-ink-soft uppercase">{ceilingTypes[pair.type].name}</p>
+                <h3 class="mt-1.5 text-[1.125rem] font-semibold lg:text-[1.25rem]">{pair.title}</h3>
+                <p class="mt-2 text-[0.9375rem] leading-relaxed text-ink-soft">{pair.text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}

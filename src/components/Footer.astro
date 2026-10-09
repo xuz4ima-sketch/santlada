@@ -5,6 +5,7 @@ import { site } from '../config/site';
 import { waLink } from '../lib/whatsapp';
 
 const year = new Date().getFullYear();
+const base = import.meta.env.BASE_URL;
 ---
 
 <footer class="border-t border-line bg-plane">
@@ -52,10 +53,10 @@ const year = new Date().getFullYear();
     <div>
       <h2 class="font-semibold">На сайте</h2>
       <ul class="mt-3 grid gap-2 text-[0.9375rem] text-ink-soft">
-        <li><a href="/#vidy" class="hover:text-ink">Виды потолков</a></li>
-        <li><a href="/raboty/" class="hover:text-ink">Примеры потолков</a></li>
-        <li><a href="/#calc" class="hover:text-ink">Расчёт стоимости</a></li>
-        <li><a href="/#voprosy" class="hover:text-ink">Частые вопросы</a></li>
+        <li><a href={`${base}#ceny`} class="hover:text-ink">Полотна и цены</a></li>
+        <li><a href={`${base}#raboty`} class="hover:text-ink">Работы</a></li>
+        <li><a href={`${base}#do-posle`} class="hover:text-ink">До и после</a></li>
+        <li><a href={`${base}#voprosy`} class="hover:text-ink">Частые вопросы</a></li>
       </ul>
     </div>
   </div>

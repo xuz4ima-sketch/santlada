@@ -352,9 +352,9 @@
   }
 }
 
-/* На телефоне «Рассчитать» уже есть в нижней панели */
+/* Вторая кнопка — прозрачная со светлой рамкой */
 .hero .hero-cta {
-  display: none;
+  flex: 1 1 auto;
   background: rgb(255 255 255 / 0.08);
   color: #fff;
   --tw-ring-color: rgb(255 255 255 / 0.55);
@@ -367,14 +367,9 @@
 }
 
 @media (min-width: 40.0625rem) {
-  .hero .hero-more {
-    flex: 0 0 auto;
-  }
-}
-
-@media (min-width: 64rem) {
+  .hero .hero-more,
   .hero .hero-cta {
-    display: inline-flex;
+    flex: 0 0 auto;
   }
 }
 
@@ -523,18 +518,6 @@
   --fx-to: inset(0 0 0 0);
 }
 
-.page[data-fx='iris'] {
-  --fx-from: circle(0px at 50% 12rem);
-  --fx-to: circle(100vmax at 50% 12rem);
-  --fx-time: 1.25s;
-}
-
-.page[data-fx='iris-low'] {
-  --fx-from: circle(0px at 50% 100%);
-  --fx-to: circle(100vmax at 50% 100%);
-  --fx-time: 1.25s;
-}
-
 .page[data-fx='slant'] {
   --fx-from: polygon(0 0, 0 0, -45% 100%, 0 100%);
   --fx-to: polygon(0 0, 145% 0, 100% 100%, 0 100%);
@@ -619,422 +602,38 @@
   }
 }
 
-/*
- * «Виды потолков» — отдельная страница-слайдер. Все слайды лежат друг на друге в одной ячейке сетки,
- * состояние задаёт скрипт: active — показан, before — уже пролистан (слева), after — ещё впереди (справа).
- * Фото «стирается» шторкой по направлению листания, внутри двигается с запаздыванием, текст собирается по строкам.
- * Без скрипта (нет класса .js) слайды просто идут друг за другом.
- */
-.vidy-inner {
-  display: grid;
-  gap: 1.5rem;
-  padding-block: 2.25rem 2rem;
-}
-
-@media (min-width: 64rem) {
-  .vidy-inner {
-    gap: 1.75rem;
-    padding-block: 2.5rem;
-  }
-}
-
-.vidy-head {
+/* Карточка полотна: фото сверху, цена крупно, кнопка прижата к низу — у всех трёх карточек на одной линии */
+.canvas-card {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem 2rem;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  background: var(--color-plane);
+  box-shadow: var(--shadow-float);
 }
 
-.vidy-head .lead,
-.page-head .lead {
-  max-width: 62rem;
-}
-
-.vidy-controls {
-  display: none;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.js .vidy-controls {
-  display: flex;
-}
-
-.vidy-count {
-  margin-right: 0.25rem;
-  font-family: var(--font-display);
-  font-size: 1.0625rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-ink-soft);
-}
-
-.vidy-count b {
-  margin-right: 0.15em;
-  font-size: 1.75rem;
-  font-weight: 500;
-  color: var(--color-ink);
-}
-
-.vidy-arrow {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
+.canvas-badge {
+  position: absolute;
+  top: 0.875rem;
+  left: 0.875rem;
   border-radius: 999px;
-  color: var(--color-ink);
-  box-shadow: inset 0 0 0 1px rgb(14 26 58 / 0.3);
-  transition:
-    background-color 0.2s,
-    color 0.2s,
-    opacity 0.2s;
-
-  &:hover:not(:disabled) {
-    background: var(--color-ink);
-    color: #fff;
-  }
-
-  &:disabled {
-    opacity: 0.35;
-  }
-}
-
-.vidy-slides {
-  position: relative;
-  z-index: 0;
-  isolation: isolate;
-  touch-action: pan-y;
-}
-
-/* Мягкое свечение за фото — как подсветка парящего потолка */
-.vidy-slides::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  top: 8%;
-  right: -4%;
-  width: 62%;
-  height: 84%;
-  background: radial-gradient(closest-side, rgb(155 188 255 / 0.3), transparent);
-  filter: blur(28px);
-  pointer-events: none;
-}
-
-.vidy-slide {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: 1.5rem;
-}
-
-.vidy-slide + .vidy-slide {
-  margin-top: 3rem;
-}
-
-.js .vidy-slides {
-  display: grid;
-}
-
-.js .vidy-slide {
-  grid-area: 1 / 1;
-  visibility: hidden;
-  pointer-events: none;
-  /* Пролистанный слайд прячется только после того, как отработает его анимация */
-  transition: visibility 0s linear 1s;
-}
-
-.js .vidy-slide + .vidy-slide {
-  margin-top: 0;
-}
-
-.js .vidy-slide[data-state='active'] {
-  z-index: 2;
-  visibility: visible;
-  pointer-events: auto;
-  transition-delay: 0s;
-}
-
-@media (min-width: 64rem) {
-  .vidy-slide {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    align-items: center;
-    gap: 3.5rem;
-  }
-
-  .vidy-media {
-    order: 2;
-  }
-}
-
-.vidy-media {
-  position: relative;
-  overflow: hidden;
-  aspect-ratio: 16 / 10;
-  border-radius: var(--radius-media);
-  background: rgb(255 255 255 / 0.08);
-}
-
-@media (min-width: 40rem) {
-  .vidy-media {
-    aspect-ratio: 4 / 3;
-  }
-}
-
-@media (min-width: 64rem) {
-  .vidy-media {
-    aspect-ratio: auto;
-    /* Шапка + заголовок + вкладки занимают ~25rem, остальное — фото: вся страница помещается в экран */
-    height: clamp(20rem, calc(100svh - 25rem), 34rem);
-  }
-}
-
-.vidy-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  -webkit-user-drag: none;
-  user-select: none;
-}
-
-.vidy-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.vidy-eyebrow {
+  background: rgb(255 255 255 / 0.92);
+  padding: 0.3rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-brand);
+  color: var(--color-brand-deep);
+  backdrop-filter: blur(6px);
 }
 
-.vidy-title {
-  margin-top: 0.75rem;
-  font-family: var(--font-display);
-  font-size: clamp(2.25rem, 5.2vw, 3.75rem);
-  font-weight: 500;
-  line-height: 1.02;
-  letter-spacing: -0.025em;
-}
-
-.vidy-price {
-  margin-top: 1rem;
-  font-size: 1.0625rem;
-}
-
-.vidy-price b {
-  margin-inline: 0.1em;
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.vidy-desc {
-  margin-top: 0.875rem;
-  max-width: 34rem;
-  line-height: 1.6;
-  color: var(--color-ink-soft);
-}
-
-.vidy-points {
-  display: none;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-  font-size: 0.9375rem;
-}
-
-/* На телефоне список скрыт, чтобы слайд не вырастал выше экрана */
-@media (min-width: 40rem) {
-  .vidy-points {
-    display: grid;
-  }
-}
-
-.vidy-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1.75rem;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .js .vidy-media {
-    clip-path: inset(0 0 0 100%);
-    transition: clip-path 0.95s cubic-bezier(0.77, 0, 0.18, 1);
-  }
-
-  .js .vidy-slide[data-state='active'] .vidy-media {
-    clip-path: inset(0 0 0 0);
-  }
-
-  .js .vidy-slide[data-state='before'] .vidy-media {
-    clip-path: inset(0 100% 0 0);
-  }
-
-  .js .vidy-img {
-    transform: scale(1.2) translate3d(12%, 0, 0);
-    transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .js .vidy-slide[data-state='active'] .vidy-img {
-    transform: none;
-  }
-
-  .js .vidy-slide[data-state='before'] .vidy-img {
-    transform: scale(1.2) translate3d(-12%, 0, 0);
-  }
-
-  .js .vidy-info > * {
-    opacity: 0;
-    transform: translate3d(2.75rem, 0, 0);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-  }
-
-  .js .vidy-slide[data-state='before'] .vidy-info > * {
-    transform: translate3d(-2.75rem, 0, 0);
-  }
-
-  .js .vidy-slide[data-state='active'] .vidy-info > * {
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity 0.6s ease calc(0.4s + var(--i, 0) * 0.07s),
-      transform 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.4s + var(--i, 0) * 0.07s);
-  }
-}
-
-/* «Уменьшить движение»: слайд меняется сразу, без задержки скрытия прежнего */
-@media (prefers-reduced-motion: reduce) {
-  .js .vidy-slide {
-    transition-delay: 0s !important;
-  }
-}
-
-.vidy-tabs {
-  display: none;
-}
-
-.js .vidy-tabs {
-  display: block;
-}
-
-.vidy-tabs-grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
-  border-top: 1px solid rgb(14 26 58 / 0.2);
-}
-
-.vidy-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.15rem;
-  padding: 0.9rem 0.25rem 0.25rem 0;
-  text-align: left;
-  color: rgb(14 26 58 / 0.55);
-  transition: color 0.3s;
-
-  &:hover,
-  &[aria-current='true'] {
-    color: var(--color-ink);
-  }
-}
-
-.vidy-tab-num {
-  font-family: var(--font-display);
+/* «До / после»: два кадра рядом, подпись-метка в углу каждого */
+.ba-tag {
+  position: absolute;
+  top: 0.625rem;
+  left: 0.625rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
   font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.vidy-tab-name {
-  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.25;
-}
-
-@media (min-width: 40rem) {
-  .vidy-tab {
-    padding-top: 1.1rem;
-  }
-
-  .vidy-tab-name {
-    font-size: 1rem;
-  }
-}
-
-.vidy-bar {
-  position: absolute;
-  top: -1px;
-  left: 0;
-  width: calc(100% / var(--n, 4));
-  height: 3px;
-  background: var(--color-brand);
-  transform: translateX(calc(var(--cur, 0) * 100%));
-  transition: transform 0.75s cubic-bezier(0.77, 0, 0.18, 1);
-}
-
-/*
- * «Работы» — карусель в 3D. Карточки лежат в одной точке и разъезжаются по положению:
- * transform каждой считает компонент WorksShowcase (расстояние до центра d), здесь — размеры и базовый вид.
- */
-.wf {
-  --wf-w: min(78vw, 44rem);
-  --wf-step: 74%;
-}
-
-@media (min-width: 48rem) {
-  .wf {
-    --wf-w: min(60vw, 44rem);
-    --wf-step: 64%;
-  }
-}
-
-.wf-stage {
-  position: relative;
-  /* Заголовок, вкладки и подпись занимают ~32rem: вся страница «Работ» помещается в экран */
-  height: clamp(16rem, calc(100svh - 32rem), 29rem);
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.wf-item {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: var(--wf-w);
-  margin-left: calc(var(--wf-w) / -2);
-  will-change: transform;
-}
-
-.wf-card {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: var(--radius-media);
-  background: var(--color-mist);
-  box-shadow:
-    0 1px 2px rgb(14 26 58 / 0.1),
-    0 34px 46px -30px rgb(15 43 107 / 0.7);
-}
-
-.wf-card img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-  -webkit-user-drag: none;
+  line-height: 1.3;
 }
 
 /*
@@ -1110,9 +709,7 @@
     opacity: 1;
   }
 
-  .glare::after,
-  .wf-card::after,
-  .vidy-media::after {
+  .glare::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -1123,15 +720,13 @@
   }
 
   /* Блик идёт слева направо только при наведении; обратно возвращается мгновенно и не виден */
-  .glare:hover::after,
-  .wf-card:hover::after,
-  .vidy-media:hover::after {
+  .glare:hover::after {
     background-position: 0 0;
     transition: background-position 1s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 }
 
-/* Переход между настоящими страницами (главная ↔ примеры): мягкое растворение */
+/* Переход между настоящими страницами (главная ↔ 404): мягкое растворение */
 @view-transition {
   navigation: auto;
 }

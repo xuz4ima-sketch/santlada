@@ -6,7 +6,6 @@ import manropeCyrillic from '@fontsource-variable/manrope/files/manrope-cyrillic
 import onestCyrillic from '@fontsource-variable/onest/files/onest-cyrillic-wght-normal.woff2?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import CartDrawer from '../components/calc/CartDrawer';
 import MobileBar from '../components/MobileBar';
 import { site } from '../config/site';
 
@@ -14,12 +13,13 @@ interface Props {
   title: string;
   description: string;
   /** Без шапки-меню якорей (для страниц, где нет блоков главной) */
-  page?: 'home' | 'works' | 'other';
+  page?: 'home' | 'other';
 }
 
 const { title, description, page = 'home' } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href;
-const ogImage = new URL('/og.jpg', Astro.site ?? site.url).href;
+const base = import.meta.env.BASE_URL;
+const ogImage = new URL(`${base}og.jpg`, Astro.site ?? site.url).href;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -56,11 +56,11 @@ const jsonLd = {
       document.documentElement.classList.add('js');
     </script>
 
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <link rel="icon" href={`${base}favicon-48.png`} sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href={`${base}apple-touch-icon.png`} />
+    <link rel="manifest" href={`${base}manifest.webmanifest`} />
+    <link rel="sitemap" href={`${base}sitemap-index.xml`} />
 
     <link rel="preload" href={manropeCyrillic} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={onestCyrillic} as="font" type="font/woff2" crossorigin />
@@ -104,12 +104,9 @@ const jsonLd = {
       <slot />
     </main>
     <Footer />
-    <CartDrawer client:load />
     <MobileBar client:load />
 
     <script>
-      import { setDraftType, scrollToCalc, resetDraft, $cartOpen } from '../stores/order';
-      import type { CeilingType } from '../config/site';
       import { initPointerFx } from '../lib/fx';
 
       // Эффекты для мыши: магнит у кнопок, свечение карточек, наклон фото
@@ -159,27 +156,6 @@ const jsonLd = {
         show(pages.length - 1);
         rises.forEach((el) => (el.dataset.in = ''));
       }
-
-      // Кнопки «Рассчитать» в статичных блоках: data-calc="linii" или data-calc (без вида)
-      document.addEventListener('click', (event) => {
-        const target = event.target as HTMLElement | null;
-        const calc = target?.closest<HTMLElement>('[data-calc]');
-        if (calc) {
-          const type = calc.dataset.calc as CeilingType | '';
-          if (type) setDraftType(type);
-          if (calc.dataset.calcNew !== undefined) resetDraft();
-          if (document.getElementById('calc')) {
-            event.preventDefault();
-            scrollToCalc();
-          }
-          return;
-        }
-        const cart = target?.closest<HTMLElement>('[data-open-cart]');
-        if (cart) {
-          event.preventDefault();
-          $cartOpen.set(true);
-        }
-      });
     </script>
   </body>
 </html>

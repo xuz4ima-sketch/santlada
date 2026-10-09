@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { ceilingOrder, ceilingTypes, type CeilingType } from '../../config/site';
 import type { Work } from '../../lib/works';
-import { wantLike } from '../../stores/order';
-import { IconChevronLeft, IconChevronRight, IconClose, IconHeart, IconPlay } from '../icons';
+import { buildLikeMessage, waLink } from '../../lib/whatsapp';
+import { IconChevronLeft, IconChevronRight, IconClose, IconPlay, IconWhatsApp } from '../icons';
 
 export type Filter = CeilingType | 'all';
+
+/** Ссылка «Хочу такой потолок»: адрес сайта подставляется при нажатии — так ссылка верна и на временном адресе */
+const likeHref = (work: Work) => waLink(buildLikeMessage(work.caption, work.id));
+const likeClick = (work: Work) => (e: MouseEvent<HTMLAnchorElement>) => {
+  e.currentTarget.href = waLink(buildLikeMessage(work.caption, work.id, window.location.origin + import.meta.env.BASE_URL));
+};
 
 interface Props {
   works: Work[];
@@ -40,7 +46,7 @@ export default function WorksGallery({ works, compact = false, syncUrl = false, 
     return c;
   }, [works]);
 
-  // Ссылка вида /raboty/#w-226 сразу открывает работу; ?vid=linii — включает фильтр
+  // Ссылка вида /#w-226 сразу открывает работу; ?vid=linii — включает фильтр
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const vid = params.get('vid') as Filter | null;
@@ -143,14 +149,16 @@ function Tile({ work, square, onOpen }: { work: Work; square: boolean; onOpen: (
       <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-ink/80 via-ink/40 to-transparent p-3 pt-12 text-[0.875rem] leading-snug text-white [@media(hover:hover)]:block [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
         {work.caption}
       </figcaption>
-      <button
-        type="button"
-        onClick={() => wantLike({ id: work.id, type: work.types[0] })}
+      <a
+        href={likeHref(work)}
+        onClick={likeClick(work)}
+        target="_blank"
+        rel="noopener"
         className="absolute top-2.5 right-2.5 hidden items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[0.8125rem] font-semibold text-ink opacity-0 shadow-[var(--shadow-float)] transition-opacity group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:hover)]:inline-flex"
       >
-        <IconHeart size={14} />
+        <IconWhatsApp size={14} className="text-wa" />
         Хочу такой
-      </button>
+      </a>
     </figure>
   );
 }
@@ -298,17 +306,16 @@ export function Lightbox({
             <button type="button" onClick={prev} className="btn min-h-12 flex-1 bg-white/10 text-white hover:bg-white/20 sm:hidden" aria-label="Предыдущее фото">
               <IconChevronLeft size={20} />
             </button>
-            <button
-              type="button"
-              className="btn-primary min-h-12 flex-[3] whitespace-nowrap sm:flex-none"
-              onClick={() => {
-                onClose();
-                wantLike({ id: work.id, type: work.types[0] });
-              }}
+            <a
+              href={likeHref(work)}
+              onClick={likeClick(work)}
+              target="_blank"
+              rel="noopener"
+              className="btn-wa min-h-12 flex-[3] whitespace-nowrap sm:flex-none"
             >
-              <IconHeart size={18} />
+              <IconWhatsApp size={18} />
               Хочу такой потолок
-            </button>
+            </a>
             <button type="button" onClick={next} className="btn min-h-12 flex-1 bg-white/10 text-white hover:bg-white/20 sm:hidden" aria-label="Следующее фото">
               <IconChevronRight size={20} />
             </button>

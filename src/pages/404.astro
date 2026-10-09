@@ -1,14 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="Страница не найдена — SANTLADA" description="Такой страницы нет на сайте SANTLADA." page="other">
   <section class="container-page py-24">
     <h1 class="h-display text-[2rem] sm:text-[3rem]">Такой страницы нет</h1>
-    <p class="lead mt-4">Возможно, ссылка устарела. Начните с главной — там примеры, виды потолков и расчёт стоимости.</p>
+    <p class="lead mt-4">Возможно, ссылка устарела. Начните с главной — там работы, полотна и цены.</p>
     <div class="mt-8 flex flex-wrap gap-3">
-      <a href="/" class="btn-primary">На главную</a>
-      <a href="/raboty/" class="btn-ghost">Смотреть примеры</a>
+      <a href={base} class="btn-primary">На главную</a>
+      <a href={`${base}#raboty`} class="btn-ghost">Смотреть работы</a>
     </div>
   </section>
 </Layout>

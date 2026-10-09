@@ -1,21 +1,20 @@
 import { useRef, useState } from 'react';
+import { canvases } from '../config/canvases';
 import { measureTimes, site } from '../config/site';
-import { useClientStore } from '../lib/useMounted';
 import { buildMeasureMessage, emptyContact, waLink, type Contact } from '../lib/whatsapp';
-import { $contact } from '../stores/order';
 import { IconWhatsApp } from './icons';
 
 const OTHER = '__other';
 
-/** Короткая запись на замер без расчёта — уходит в WhatsApp */
+/** Короткая запись на замер — уходит в WhatsApp */
 export default function QuickMeasure() {
-  const contact = useClientStore($contact, emptyContact);
+  const [contact, setContact] = useState<Contact>(emptyContact);
   const [otherCity, setOtherCity] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const selectRef = useRef<HTMLSelectElement>(null);
 
-  const set = (patch: Partial<Contact>) => $contact.set({ ...$contact.get(), ...patch });
+  const set = (patch: Partial<Contact>) => setContact((c) => ({ ...c, ...patch }));
   const listed = site.cities.includes(contact.city);
   const cityValue = listed ? contact.city : otherCity || contact.city ? OTHER : '';
 
@@ -98,6 +97,20 @@ export default function QuickMeasure() {
         </div>
       </fieldset>
 
+      <fieldset>
+        <legend className="label">Полотно</legend>
+        <div className="flex flex-wrap gap-2">
+          {canvases.map((c) => (
+            <button key={c.id} type="button" className="chip" aria-pressed={contact.canvas === c.name} onClick={() => set({ canvas: contact.canvas === c.name ? '' : c.name })}>
+              {c.name}
+            </button>
+          ))}
+          <button type="button" className="chip" aria-pressed={contact.canvas === ''} onClick={() => set({ canvas: '' })}>
+            Посоветуйте
+          </button>
+        </div>
+      </fieldset>
+
       <div>
         <label htmlFor="qm-comment" className="label">
           Что нужно сделать
@@ -105,7 +118,7 @@ export default function QuickMeasure() {
         <textarea
           id="qm-comment"
           className="field min-h-[5.5rem] resize-y"
-          placeholder="Например, две комнаты и кухня, хочу парящий потолок"
+          placeholder="Например, две комнаты и кухня, хочу световые линии. Фото понравившегося потолка можно прислать в чате"
           value={contact.comment}
           onChange={(e) => set({ comment: e.target.value })}
         />
@@ -131,7 +144,7 @@ export default function QuickMeasure() {
       </a>
       {sent && (
         <p className="text-[0.9375rem] text-ink-soft" role="status">
-          Открыли WhatsApp с текстом заявки. Нажмите «Отправить» в чате — Иса ответит и договорится о времени.
+          Открыли WhatsApp с текстом заявки. Нажмите «Отправить» в чате и, если есть, приложите фото потолка, который понравился. Иса ответит и договорится о времени.
         </p>
       )}
     </form>

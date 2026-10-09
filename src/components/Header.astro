@@ -1,21 +1,20 @@
 ---
 import Logo from './Logo.astro';
-import CartButton from './calc/CartButton';
 import { IconMenu, IconPhone, IconWhatsApp } from './icons';
 import { site } from '../config/site';
 import { waLink } from '../lib/whatsapp';
 
 interface Props {
-  page: 'home' | 'works' | 'other';
+  page: 'home' | 'other';
 }
 const { page } = Astro.props;
-const home = page === 'home' ? '' : '/';
+const home = page === 'home' ? '' : import.meta.env.BASE_URL;
 
 const nav = [
-  { href: `${home}#vidy`, label: 'Виды' },
-  { href: page === 'home' ? '#raboty' : '/raboty/', label: 'Примеры', current: page === 'works' },
-  { href: `${home}#calc`, label: 'Расчёт' },
-  { href: `${home}#kak`, label: 'Как заказать' },
+  { href: `${home}#ceny`, label: 'Цены' },
+  { href: `${home}#raboty`, label: 'Работы' },
+  { href: `${home}#do-posle`, label: 'До и после' },
+  { href: `${home}#proekt`, label: 'Проект' },
   { href: `${home}#voprosy`, label: 'Вопросы' },
   { href: `${home}#kontakty`, label: 'Контакты', mobileOnly: true },
 ];
@@ -40,7 +39,6 @@ const wa = waLink('Здравствуйте! Пишу с сайта по пов�
             <li>
               <a
                 href={item.href}
-                aria-current={item.current ? 'page' : undefined}
                 class="relative block rounded-lg px-3 py-2 text-[0.9375rem] whitespace-nowrap text-ink-soft transition-colors hover:text-ink data-[active]:text-ink aria-[current=page]:font-semibold aria-[current=page]:text-ink"
               >
                 {item.label}
@@ -63,7 +61,6 @@ const wa = waLink('Здравствуйте! Пишу с сайта по пов�
         <IconWhatsApp size={18} />
         WhatsApp
       </a>
-      <CartButton client:load />
       <button
         type="button"
         class="hdr-btn inline-flex size-11 items-center justify-center rounded-lg ring-1 ring-line ring-inset hover:bg-haze lg:hidden"
