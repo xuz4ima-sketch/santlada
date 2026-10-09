@@ -1886,6 +1886,64 @@
   }
 }
 
+/*
+ * Телефон и планшет: как сторис (тот же запрос — STORY_MQ в CanvasStory.tsx).
+ * Карточка не прилипает: страница листается как обычно, а сцены переключаются сами.
+ * Полоска текущей сцены заполняется за --story; когда заполнилась, скрипт показывает следующую сцену.
+ * Пока карточка не на экране или палец лежит на картинке (нет data-run), полоска стоит на паузе.
+ * Высота карточки та же, что была у прилипшей, — она целиком помещается на экран.
+ */
+@media (max-width: 63.99rem), (hover: none) {
+  .cs-scroller {
+    --story: 5s;
+    height: auto;
+  }
+
+  .cs-pin {
+    position: relative;
+    top: auto;
+    height: auto;
+    will-change: auto;
+  }
+
+  .cs-wrap {
+    height: auto;
+  }
+
+  .cs-card {
+    height: min(var(--pin-h) - 1.5rem, 46rem);
+  }
+
+  @media (min-width: 48rem) {
+    .cs-card {
+      height: min(var(--pin-h) - 1.5rem, 34rem);
+    }
+  }
+
+  /* Подсказка «Листайте вниз» здесь не нужна — сцены листаются сами */
+  .cs-swipehint {
+    display: none;
+  }
+
+  .cs-scroller[data-auto] .cs-steps button[aria-current]::after {
+    animation: cs-fill var(--story) linear both;
+    animation-play-state: paused;
+  }
+
+  .cs-scroller[data-run] .cs-steps button[aria-current]::after {
+    animation-play-state: running;
+  }
+}
+
+@keyframes cs-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 /* «Уменьшить движение»: сцены переключаются сразу, без анимаций */
 @media (prefers-reduced-motion: reduce) {
   .cs-scroller *,

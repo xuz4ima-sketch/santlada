@@ -5,11 +5,14 @@ import { waLink } from '../lib/whatsapp';
 import { IconChevronLeft, IconChevronRight, IconWhatsApp } from './icons';
 
 /*
- * «Полотна и цены» как история при прокрутке.
- * Карточка полотна стоит на месте (sticky), а прокрутка страницы переключает сцены:
- * кусочек полотна поворачивается, его меряет штангенциркуль, раскатывается рулон и т. д.
- * Прокрутка только выбирает сцену, а действие сцены доигрывает до конца само — это CSS-переходы
- * по transform и opacity (их рисует видеокарта, поэтому на телефоне ничего не дрожит).
+ * «Полотна и цены» — история из сцен: кусочек полотна поворачивается, его меряет штангенциркуль,
+ * раскатывается рулон и т. д. Действие сцены — CSS-переходы по transform и opacity, доигрывают сами.
+ *
+ * Компьютер: карточка стоит на месте (sticky), а прокрутка страницы переключает сцены.
+ * Телефон и планшет (STORY_MQ): карточка — обычный блок, сцены листаются сами, как сторис:
+ * полоска текущей сцены заполняется, а когда заполнилась — следующая сцена, после последней — следующее полотно.
+ * Нажатие справа — дальше, слева — назад, палец на картинке — пауза. Прилипание при прокрутке
+ * на iPhone дёргало страницу и проскакивало по нескольку сцен за взмах, поэтому там его нет.
  * Полотна листаются вбок — вкладками, стрелками или пальцем.
  * Сцены и тексты — в src/config/canvases.ts, анимации — в global.css (раздел «Полотна: история»).
  */
@@ -19,6 +22,9 @@ const num = (n: number, digits = 2) => new Intl.NumberFormat('ru-RU', { maximumF
 const meters = (n: number) => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 }).format(n);
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pct = (part: number, whole: number) => `${(part / whole) * 100}%`;
+
+/** Где история листается сама, как сторис. Тот же запрос — в global.css (раздел «Телефон и планшет: как сторис») */
+const STORY_MQ = '(max-width: 63.99rem), (hover: none)';
 
 /** Кусочек полотна: лицевая сторона и четыре торца */
 function Swatch({ finish, mark }: { finish: Finish; mark?: string }) {
@@ -305,7 +311,12 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0);
   const [finish, setFinish] = useState<Record<string, Finish>>({});
+  // Сторис: auto — режим телефона; playing — карточка на экране; held — палец на картинке (пауза)
+  const [auto, setAuto] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [held, setHeld] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  const card = useRef<HTMLDivElement>(null);
   const sticky = useRef<HTMLDivElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
   const steps = Math.max(...items.map((c) => c.scenes.length));
@@ -316,7 +327,44 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
   const scene = c.scenes[current];
   const currentFinish = finish[c.id] ?? c.finishes[0];
 
-  const go = useCallback((i: number) => setIndex(Math.max(0, Math.min(last, i))), [last]);
+  const go = useCallback(
+    (i: number) => {
+      setIndex(Math.max(0, Math.min(last, i)));
+      // В сторис новое полотно начинается с первой сцены (на компьютере сцену выбирает прокрутка)
+      if (auto) setStep(0);
+    },
+    [last, auto],
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(STORY_MQ);
+    const sync = () => setAuto(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  // Сторис играет, только пока карточка видна почти целиком
+  useEffect(() => {
+    const el = card.current;
+    if (!auto || !el) return;
+    const io = new IntersectionObserver(([e]) => setPlaying(e.isIntersecting), { threshold: 0.6 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [auto]);
+
+  /** Сторис: следующая сцена, после последней — первая сцена следующего полотна; назад — так же в обратную сторону */
+  const next = () => {
+    if (current < c.scenes.length - 1) setStep(current + 1);
+    else if (index < last) go(index + 1);
+  };
+  const prev = () => {
+    if (current > 0) setStep(current - 1);
+    else if (index > 0) {
+      setIndex(index - 1);
+      setStep(items[index - 1].scenes.length - 1);
+    }
+  };
 
   // Где блок на странице. Меряем только при изменении размеров — при прокрутке читаем лишь scrollY,
   // чтобы обработчик прокрутки не заставлял браузер пересчитывать стили на каждом кадре.
@@ -331,6 +379,7 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
 
   // Прокрутка → номер сцены. Сама анимация сцены — CSS-переходы, они доигрывают до конца без скрипта.
   useEffect(() => {
+    if (auto) return;
     let raf = 0;
     let started = false;
     const update = () => {
@@ -364,7 +413,7 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
     };
-  }, [steps, measure]);
+  }, [steps, measure, auto]);
 
   // Пока история на экране, нижняя панель телефона заказывает показанное полотно
   const inView = useRef(false);
@@ -389,6 +438,7 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
 
   // Нажатие на шаг прокручивает страницу к середине этой сцены
   const toStep = (i: number) => {
+    if (auto) return setStep(i);
     measure();
     const { start, run } = geo.current;
     window.scrollTo({ top: start + run * ((i + 0.5) / steps), behavior: reduced() ? 'auto' : 'smooth' });
@@ -396,21 +446,39 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
 
   const onDown = (e: PointerEvent<HTMLDivElement>) => {
     swipe.current = { x: e.clientX, y: e.clientY };
+    if (auto) setHeld(true);
   };
   const onUp = (e: PointerEvent<HTMLDivElement>) => {
     const s = swipe.current;
     swipe.current = null;
+    setHeld(false);
     if (!s) return;
     const dx = e.clientX - s.x;
-    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 1.5) go(index + (dx < 0 ? 1 : -1));
+    const dy = e.clientY - s.y;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) return go(index + (dx < 0 ? 1 : -1));
+    // Сторис: короткое нажатие по картинке (не по кнопке) — слева назад, справа дальше
+    if (!auto || Math.abs(dx) > 10 || Math.abs(dy) > 10 || (e.target as Element).closest('button, a')) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    if (e.clientX - box.left < box.width * 0.3) prev();
+    else next();
+  };
+  const onCancel = () => {
+    swipe.current = null;
+    setHeld(false);
   };
 
   return (
-    <div ref={scroller} className="cs-scroller" style={{ '--steps': steps } as CSSProperties}>
+    <div
+      ref={scroller}
+      className="cs-scroller"
+      style={{ '--steps': steps } as CSSProperties}
+      data-auto={auto || undefined}
+      data-run={(auto && playing && !held) || undefined}
+    >
       <div ref={sticky} className="cs-pin">
         <div className="container-page cs-wrap">
-          <div className="cs-card">
-            <div className="cs-visual" onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => (swipe.current = null)}>
+          <div ref={card} className="cs-card">
+            <div className="cs-visual" onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={onCancel}>
               <Stage key={c.id} c={c} finish={currentFinish} scene={scene} />
 
               <div className="cs-tabs" role="group" aria-label="Выбор полотна">
@@ -450,10 +518,17 @@ export default function CanvasStory({ items }: { items: CanvasInfo[] }) {
                 </p>
               </div>
 
-              <ol className="cs-steps" aria-label="Что показать про полотно">
+              {/* Сторис: полоска текущей сцены заполняется (CSS-анимация cs-fill), а когда заполнилась — следующая сцена */}
+              <ol className="cs-steps" aria-label="Что показать про полотно" key={`steps-${c.id}`}>
                 {c.scenes.map((s, i) => (
                   <li key={s.kind}>
-                    <button type="button" aria-current={i === current ? 'step' : undefined} data-done={i < current || undefined} onClick={() => toStep(i)}>
+                    <button
+                      type="button"
+                      aria-current={i === current ? 'step' : undefined}
+                      data-done={i < current || undefined}
+                      onClick={() => toStep(i)}
+                      onAnimationEnd={(e) => e.animationName === 'cs-fill' && i === current && next()}
+                    >
                       <span className="sr-only">{s.title}</span>
                     </button>
                   </li>
