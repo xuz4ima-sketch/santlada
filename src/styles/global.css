@@ -1887,15 +1887,15 @@
 }
 
 /*
- * Телефон и планшет: как сторис (тот же запрос — STORY_MQ в CanvasStory.tsx).
- * Карточка не прилипает: страница листается как обычно, а сцены переключаются сами.
- * Полоска текущей сцены заполняется за --story; когда заполнилась, скрипт показывает следующую сцену.
- * Пока карточка не на экране или палец лежит на картинке (нет data-run), полоска стоит на паузе.
+ * Телефон и планшет: свайп (тот же запрос — SWIPE_MQ в CanvasStory.tsx).
+ * Карточка не прилипает: страница листается как обычно, а сцены листаются свайпом по картинке —
+ * один свайп, одна сцена. Пока палец ведёт, сцена едет за ним (data-drag), отпустил — плавно возвращается,
+ * а кусочек полотна уже переходит в положение новой сцены. Текст новой сцены въезжает с той стороны,
+ * куда листали: сцены до текущей ждут слева (data-before), после — справа.
  * Высота карточки та же, что была у прилипшей, — она целиком помещается на экран.
  */
 @media (max-width: 63.99rem), (hover: none) {
   .cs-scroller {
-    --story: 5s;
     height: auto;
   }
 
@@ -1920,27 +1920,29 @@
     }
   }
 
-  /* Подсказка «Листайте вниз» здесь не нужна — сцены листаются сами */
-  .cs-swipehint {
-    display: none;
+  .cs-stage {
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    &[data-drag] {
+      transition: none;
+    }
   }
 
-  .cs-scroller[data-auto] .cs-steps button[aria-current]::after {
-    animation: cs-fill var(--story) linear both;
-    animation-play-state: paused;
+  .cs-scene {
+    transform: translateX(1.75rem);
+
+    &[data-before] {
+      transform: translateX(-1.75rem);
+    }
+
+    &[data-current] {
+      transform: none;
+    }
   }
 
-  .cs-scroller[data-run] .cs-steps button[aria-current]::after {
-    animation-play-state: running;
-  }
-}
-
-@keyframes cs-fill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
+  /* Подсказка «Листайте вбок»: стрелки смотрят вправо и бегут вбок */
+  .cs-swipehint i {
+    rotate: -90deg;
   }
 }
 
